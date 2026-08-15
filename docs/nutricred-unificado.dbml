@@ -1,7 +1,7 @@
-Project nutriacompana_unificado {
+Project nutricred_unificado {
   database_type: 'PostgreSQL'
   Note: '''
-    Modelo unificado de NutriAcompaña / Yanapiri Wawa para discusión del equipo.
+    Modelo unificado de NutriCRED para discusión del equipo.
     Combina el bot, monitoreo antropométrico, riesgo de anemia, planes alimentarios,
     validación profesional y panel clínico.
 

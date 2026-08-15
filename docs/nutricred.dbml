@@ -1,7 +1,7 @@
-Project nutriacompana {
+Project nutricred {
   database_type: 'PostgreSQL'
   Note: '''
-    Modelo colaborativo de NutriAcompaña / Yanapiri Wawa.
+    Modelo colaborativo de NutriCRED.
     La migración ejecutable oficial sigue siendo db/schema.sql.
     Los enums de este diagrama representan restricciones CHECK del SQL real.
   '''

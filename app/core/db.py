@@ -350,7 +350,14 @@ def guardar_estado_conversacion(telefono: str, state: dict) -> None:
 
 
 def limpiar_estado_conversacion(telefono: str) -> None:
-    guardar_estado_conversacion(telefono, {})
+    client = _get_client()
+    if client:
+        client.table("conversation_states").delete().eq(
+            "whatsapp_identity", str(telefono)
+        ).execute()
+        return
+    with _lock:
+        _mem["states"].pop(str(telefono), None)
 
 
 def _caregiver_for_identity(identity: str) -> dict | None:
@@ -365,6 +372,92 @@ def _caregiver_for_identity(identity: str) -> dict | None:
         )
         return _response_data(response)
     return next((c for c in _mem["caregivers"] if c["whatsapp_identity"] == str(identity)), None)
+
+
+def obtener_cuidador(whatsapp_identity: str) -> dict | None:
+    """Obtiene a la persona cuidadora sin exigir que ya tenga niños registrados."""
+    caregiver = _caregiver_for_identity(whatsapp_identity)
+    return deepcopy(caregiver) if caregiver else None
+
+
+def registrar_cuidador(
+    *,
+    whatsapp_identity: str,
+    full_name: str,
+    relationship: str,
+    district: str,
+    phone_number: str | None = None,
+    consent_version: str = "2026-08-v1",
+) -> dict:
+    """Registra al adulto después de su consentimiento, antes de registrar niños."""
+    full_name = " ".join(str(full_name or "").split())
+    relationship = str(relationship or "cuidador").strip().lower()
+    district = " ".join(str(district or "").split())
+    if len(full_name) < 2:
+        raise ValueError("Escribe el nombre de la persona cuidadora.")
+    if relationship not in {"madre", "padre", "cuidador"}:
+        raise ValueError("La relación debe ser madre, padre o persona cuidadora.")
+    if len(district) < 2:
+        raise ValueError("Escribe el distrito donde vive la familia.")
+
+    client = _get_client()
+    caregiver = _caregiver_for_identity(whatsapp_identity)
+    now = _now()
+    values = {
+        "full_name": full_name,
+        "relationship": relationship,
+        "district": district,
+        "consent_at": now,
+        "consent_version": consent_version,
+        "consent_withdrawn_at": None,
+        "updated_at": now,
+    }
+    if phone_number:
+        values["phone_number"] = phone_number
+
+    if caregiver:
+        if client:
+            try:
+                client.table("caregivers").update(values).eq("id", caregiver["id"]).execute()
+            except Exception as exc:
+                # Compatibilidad hasta aplicar la migración nueva en Supabase.
+                detail = str(exc).lower()
+                if "pgrst204" not in detail:
+                    raise
+                legacy = {
+                    key: value
+                    for key, value in values.items()
+                    if key not in {"relationship", "consent_version", "consent_withdrawn_at"}
+                }
+                client.table("caregivers").update(legacy).eq("id", caregiver["id"]).execute()
+            return {**caregiver, **values}
+        caregiver.update(values)
+        return deepcopy(caregiver)
+
+    caregiver = {
+        "id": _uuid(),
+        "whatsapp_identity": str(whatsapp_identity),
+        "phone_number": phone_number,
+        **values,
+        "created_at": now,
+    }
+    if client:
+        try:
+            response = client.table("caregivers").insert(caregiver).execute()
+        except Exception as exc:
+            detail = str(exc).lower()
+            if "pgrst204" not in detail:
+                raise
+            legacy = {
+                key: value
+                for key, value in caregiver.items()
+                if key not in {"relationship", "consent_version", "consent_withdrawn_at"}
+            }
+            response = client.table("caregivers").insert(legacy).execute()
+        return _response_data(response, [])[0]
+    with _lock:
+        _mem["caregivers"].append(caregiver)
+    return deepcopy(caregiver)
 
 
 def _resolve_health_center(reported: str, district: str) -> dict | None:

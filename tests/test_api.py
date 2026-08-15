@@ -9,7 +9,7 @@ def test_health_and_preview_endpoints():
     with TestClient(app) as client:
         health = client.get("/health")
         assert health.status_code == 200
-        assert health.json()["service"] == "nutriacompana"
+        assert health.json()["service"] == "nutricred"
         assert health.json()["environment"] in {"development", "production"}
 
         preview = client.post(
@@ -27,6 +27,31 @@ def test_health_and_preview_endpoints():
         )
         assert preview.status_code == 200
         assert preview.json()["assessment"]["semaforo"] == "amarillo"
+
+
+def test_api_documentation_exposes_tags_examples_and_bearer_security():
+    with TestClient(app) as client:
+        home = client.get("/")
+        assert home.status_code == 200
+        assert home.json()["documentation"] == "/docs"
+        assert client.get("/docs").status_code == 200
+        assert client.get("/redoc").status_code == 200
+        schema = client.get("/openapi.json").json()
+
+    assert schema["info"]["version"] == "0.2.0"
+    assert {tag["name"] for tag in schema["tags"]} >= {
+        "Servicio",
+        "Antropometría",
+        "Profesionales de salud",
+        "Kapso",
+    }
+    history = schema["paths"]["/clinical/children/{child_id}/history"]["get"]
+    assert history["security"] == [{"SupabaseBearer": []}]
+    webhook_parameters = {
+        parameter["name"]
+        for parameter in schema["paths"]["/webhooks/kapso"]["post"]["parameters"]
+    }
+    assert webhook_parameters == {"X-Webhook-Event", "X-Webhook-Signature"}
 
 
 def test_clinical_endpoints_require_bearer_token():

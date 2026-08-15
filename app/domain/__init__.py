@@ -1,2 +1,1 @@
-"""Reglas de dominio de NutriAcompaña."""
-
+"""Reglas de dominio de NutriCRED."""

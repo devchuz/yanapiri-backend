@@ -37,7 +37,7 @@ class Assessment:
     semaforo: str
     reasons: list[str]
     warnings: list[str]
-    rule_version: str = "nutriacompana-oms2006-v1"
+    rule_version: str = "nutricred-oms2006-v1"
 
     def to_dict(self) -> dict:
         return asdict(self)

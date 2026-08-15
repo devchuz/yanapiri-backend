@@ -1,0 +1,234 @@
+recipe_id,ingredient_order,ingredient_original,quantity,unit_original,quantity_normalized_g,quantity_normalized_ml,source_page
+REC_0001,1,habas frescas sin cascara sancochadas,1,puñado,,,10-11
+REC_0001,2,papa amarilla sancochada,1,unidad pequeña,,,10-11
+REC_0001,3,leche evaporada,2,onza,,,10-11
+REC_0001,4,aceite vegetal,1,cucharadita,,,10-11
+REC_0001,5,caldo,0.75,taza,,,10-11
+REC_0002,1,zapallo,1,trozo chico,,,12-13
+REC_0002,2,papa amarilla,1,unidad,,,12-13
+REC_0002,3,leche evaporada,1,onza,,,12-13
+REC_0002,4,aceite vegetal,1,cucharadita,,,12-13
+REC_0002,5,caldo,1,onza,,,12-13
+REC_0003,1,papa amarilla,1,unidad chica,,,14-15
+REC_0003,2,higado de pollo,1,unidad,,,14-15
+REC_0003,3,aceite vegetal,1,cucharadita,,,14-15
+REC_0003,4,caldo,2,onza,,,14-15
+REC_0004,1,camote amarillo chico sancochado,1,unidad,,,16-17
+REC_0004,2,leche evaporada,2,onza,,,16-17
+REC_0004,3,aceite vegetal,1,cucharadita,,,16-17
+REC_0004,4,agua,3,onza,,,16-17
+REC_0005,1,zapallo,1,tajada delgada,,,18-19
+REC_0005,2,maicena,1.5,cucharada,,,18-19
+REC_0005,3,leche evaporada,5,cucharada,,,18-19
+REC_0005,4,azucar rubia,0.25,cucharadita,,,18-19
+REC_0005,5,aceite vegetal,0.5,cucharadita,,,18-19
+REC_0005,6,agua,0.125,taza,,,18-19
+REC_0005,7,canela,,,,,18-19
+REC_0005,8,clavo de olor,,,,,18-19
+REC_0006,1,zanahoria,1,rodaja delgada,,,20-21
+REC_0006,2,higado de pollo sancochado,2,cucharada,,,20-21
+REC_0006,3,papa amarilla sancochada,0.25,unidad mediana,,,20-21
+REC_0006,4,aceite vegetal,0.5,cucharadita,,,20-21
+REC_0006,5,leche evaporada,3,cucharada,,,20-21
+REC_0006,6,caldo,2,cucharada,,,20-21
+REC_0007,1,zanahoria,1,tajada gruesa,,,22-23
+REC_0007,2,maicena,1,cucharadita,,,22-23
+REC_0007,3,aceite vegetal,0.5,cucharadita,,,22-23
+REC_0007,4,leche evaporada,5,cucharada,,,22-23
+REC_0007,5,agua,8,cucharada,,,22-23
+REC_0007,6,canela,,,,,22-23
+REC_0007,7,clavo de olor,,,,,22-23
+REC_0008,1,harina de 7 semillas,1,cucharada colmada,,,24-25
+REC_0008,2,leche evaporada,6,cucharada,,,24-25
+REC_0008,3,aceite vegetal,0.5,cucharadita,,,24-25
+REC_0008,4,agua,10,cucharada,,,24-25
+REC_0008,5,canela,,,,,24-25
+REC_0008,6,clavo de olor,,,,,24-25
+REC_0009,1,higado de pollo,1,unidad,,,26-27
+REC_0009,2,harina de arveja,0.75,cucharada,,,26-27
+REC_0009,3,zanahoria,1,rodaja delgada,,,26-27
+REC_0009,4,leche evaporada,2,cucharada,,,26-27
+REC_0009,5,aceite vegetal,0.5,cucharadita,,,26-27
+REC_0009,6,caldo,5,cucharada,,,26-27
+REC_0010,1,papa amarilla,0.25,unidad pequeña,,,28-29
+REC_0010,2,zanahoria,0.125,unidad mediana,,,28-29
+REC_0010,3,yema de huevo,0.5,unidad,,,28-29
+REC_0010,4,aceite vegetal,0.5,cucharadita,,,28-29
+REC_0010,5,caldo,6,cucharada,,,28-29
+REC_0010,6,leche evaporada,2,cucharada,,,28-29
+REC_0010,7,sal yodada,1,pizca,,,28-29
+REC_0011,1,higado de pollo,1,unidad,,,34-35
+REC_0011,2,papa amarilla,1,unidad chica,,,34-35
+REC_0011,3,zanahoria,0.25,unidad,,,34-35
+REC_0011,4,cebolla de cabeza,0.25,unidad,,,34-35
+REC_0011,5,aceite vegetal,2,cucharadita,,,34-35
+REC_0011,6,sal yodada,1,pizca,,,34-35
+REC_0011,7,hierbabuena,1,rama,,,34-35
+REC_0011,8,agua,0.5,taza,,,34-35
+REC_0012,1,habas frescas y sin cascara,1,puñado,,,36-37
+REC_0012,2,papa amarilla,1,unidad chica,,,36-37
+REC_0012,3,queso fresco,1,trozo pequeño,,,36-37
+REC_0012,4,leche evaporada,1,cucharada,,,36-37
+REC_0012,5,cebolla de cabeza,0.25,unidad,,,36-37
+REC_0012,6,aceite vegetal,1,cucharada,,,36-37
+REC_0012,7,sal yodada,1,pizca,,,36-37
+REC_0012,8,agua,0.5,taza,,,36-37
+REC_0013,1,habas frescas y sin cascara,1,puñado,,,38-39
+REC_0013,2,papa amarilla,0.5,unidad chica,,,38-39
+REC_0013,3,leche evaporada,1,cucharada,,,38-39
+REC_0013,4,zapallo,1,trozo chico,,,38-39
+REC_0013,5,cebolla de cabeza,0.25,unidad,,,38-39
+REC_0013,6,aceite vegetal,2,cucharadita,,,38-39
+REC_0013,7,sal yodada,1,pizca,,,38-39
+REC_0013,8,agua,0.5,taza,,,38-39
+REC_0014,1,fideos cabello de angel u otro a eleccion,0.5,porcion,,,40-41
+REC_0014,2,tomate,0.5,unidad chico,,,40-41
+REC_0014,3,cebolla de cabeza,0.25,unidad,,,40-41
+REC_0014,4,aceite vegetal,1,cucharada,,,40-41
+REC_0014,5,higado de pollo,1,unidad,,,40-41
+REC_0014,6,zanahoria,0.25,unidad chica,,,40-41
+REC_0014,7,sal yodada,1,pizca,,,40-41
+REC_0014,8,agua,0.5,taza,,,40-41
+REC_0015,1,arroz,2,cucharada,,,42-43
+REC_0015,2,higado de pollo,1,unidad,,,42-43
+REC_0015,3,papa amarilla,0.5,unidad,,,42-43
+REC_0015,4,espinaca,1,hoja,,,42-43
+REC_0015,5,aceite vegetal,1,cucharadita,,,42-43
+REC_0015,6,sal yodada,1,pizca,,,42-43
+REC_0015,7,agua,0.5,taza,,,42-43
+REC_0016,1,fideos cabello de angel (u otra eleccion),0.5,porcion,,,44-45
+REC_0016,2,sangrecita de pollo,2,cucharada,,,44-45
+REC_0016,3,zanahoria,0.25,unidad,,,44-45
+REC_0016,4,tomate,0.5,unidad pequeño,,,44-45
+REC_0016,5,aceite vegetal,1,cucharadita,,,44-45
+REC_0016,6,laurel,1,hoja,,,44-45
+REC_0016,7,caldo,2,cucharada,,,44-45
+REC_0016,8,sal yodada,1,pizca,,,44-45
+REC_0017,1,pescado,0.25,filete,,,46-47
+REC_0017,2,cebolla,1,rodaja,,,46-47
+REC_0017,3,zanahoria,0.5,unidad,,,46-47
+REC_0017,4,pan frances,0.25,,,,46-47
+REC_0017,5,leche evaporada,4,cucharada,,,46-47
+REC_0017,6,papa sancochada,0.5,unidad,,,46-47
+REC_0017,7,aceite vegetal,1,cucharadita,,,46-47
+REC_0017,8,caldo,2,cucharada,,,46-47
+REC_0017,9,sal yodada,1,pizca,,,46-47
+REC_0018,1,fideos cabello de angel u otro de eleccion (40 g),1,porcion,,,48-49
+REC_0018,2,zapallo sancochado,2,cucharada,,,48-49
+REC_0018,3,huevo sancochado,1,yema,,,48-49
+REC_0018,4,leche evaporada,2,cucharada,,,48-49
+REC_0018,5,aceite vegetal,1,cucharadita,,,48-49
+REC_0018,6,caldo,2,cucharada,,,48-49
+REC_0018,7,sal yodada,1,pizca,,,48-49
+REC_0019,1,cebolla,0.125,unidad pequeña,,,50-51
+REC_0019,2,tomate,0.25,unidad pequeña,,,50-51
+REC_0019,3,pescado,0.5,filete,,,50-51
+REC_0019,4,aceite vegetal,0.5,cucharadita,,,50-51
+REC_0019,5,agua,0.125,taza,,,50-51
+REC_0019,6,sal yodada,1,pizca,,,50-51
+REC_0019,7,arroz graneado,2,cucharada,,,50-51
+REC_0020,1,sangrecita,2,cucharada,,,52-53
+REC_0020,2,papa picada,1,cucharada,,,52-53
+REC_0020,3,arroz graneado,2,cucharada,,,52-53
+REC_0020,4,aceite vegetal,1,cucharadita,,,52-53
+REC_0020,5,arveja sin cascara,1,cucharada,,,52-53
+REC_0020,6,zanahoria picada,1,cucharada,,,52-53
+REC_0020,7,cebolla picada,0.5,cucharada,,,52-53
+REC_0020,8,pimiento picado,0.5,cucharada,,,52-53
+REC_0020,9,caldo,0.25,taza,,,52-53
+REC_0020,10,hierbabuena,1,hoja,,,52-53
+REC_0020,11,sal yodada,1,pizca,,,52-53
+REC_0021,1,choclo,0.25,unidad,,,56-57
+REC_0021,2,arveja fresca,1,puñado,,,56-57
+REC_0021,3,zanahoria,0.25,unidad chica,,,56-57
+REC_0021,4,pechuga de pollo,1,trozo chico,,,56-57
+REC_0021,5,pan molido (rallado),2,cucharada,,,56-57
+REC_0021,6,cebolla de cabeza chica,0.25,,,,56-57
+REC_0021,7,ajos,,,,,56-57
+REC_0021,8,sal yodada,1,pizca,,,56-57
+REC_0021,9,aceite vegetal,2,cucharada,,,56-57
+REC_0021,10,agua,1,taza,,,56-57
+REC_0021,11,pasas (opcional),,,,,56-57
+REC_0021,12,arroz,4,cucharada,,,56-57
+REC_0022,1,lentejitas,2,cucharada,,,58-60
+REC_0022,2,brocoli,1,trozo chico,,,58-60
+REC_0022,3,jugo de limon,0.5,unidad,,,58-60
+REC_0022,4,pechuga de pollo,1,trozo chico,,,58-60
+REC_0022,5,queso,1,trozo pequeño,,,58-60
+REC_0022,6,papa,0.5,unidad,,,58-60
+REC_0022,7,aceite vegetal,2,cucharadita,,,58-60
+REC_0022,8,sal yodada,1,pizca,,,58-60
+REC_0022,9,arroz graneado,4,cucharada,,,58-60
+REC_0023,1,higado de pollo,1,unidad,,,61-62
+REC_0023,2,zapallo,1,trozo pequeño,,,61-62
+REC_0023,3,huevo de gallina,1,unidad,,,61-62
+REC_0023,4,harina de trigo,2,cucharada,,,61-62
+REC_0023,5,aceite vegetal,2,cucharada,,,61-62
+REC_0023,6,sal yodada,1,pizca,,,61-62
+REC_0023,7,arroz graneado,4,cucharada,,,61-62
+REC_0024,1,pechuga de pollo,1,trozo chico,,,63-64
+REC_0024,2,brocoli,1,trozo chico,,,63-64
+REC_0024,3,zanahoria,0.25,unidad chico,,,63-64
+REC_0024,4,choclo desgranado,0.25,unidad,,,63-64
+REC_0024,5,cebolla,0.25,cabeza,,,63-64
+REC_0024,6,ajo,,,,,63-64
+REC_0024,7,sal yodada,1,pizca,,,63-64
+REC_0024,8,aceite vegetal,2,cucharada,,,63-64
+REC_0024,9,agua,0.25,taza,,,63-64
+REC_0024,10,arroz graneado,4,cucharada,,,63-64
+REC_0025,1,higado de pollo,2,unidad,,,65-66
+REC_0025,2,espinaca,4,hoja,,,65-66
+REC_0025,3,arveja fresca,1,puñado,,,65-66
+REC_0025,4,ajo,,,,,65-66
+REC_0025,5,sal yodada,,pizca,,,65-66
+REC_0025,6,aceite vegetal,4,cucharada,,,65-66
+REC_0025,7,papa amarilla,1,unidad chica,,,65-66
+REC_0025,8,arroz graneado,4,cucharada,,,65-66
+REC_0026,1,yuca (20 g),1,rodaja delgada,,,67-68
+REC_0026,2,leche evaporada,3,cucharada,,,67-68
+REC_0026,3,mantequilla,0.5,cucharadita,,,67-68
+REC_0026,4,aceite vegetal,1,cucharadita,,,67-68
+REC_0026,5,higado de pollo,1,,,,67-68
+REC_0026,6,zanahoria,1,rodaja gruesa,,,67-68
+REC_0026,7,sal yodada,1,pizca,,,67-68
+REC_0026,8,ajo molido,,,,,67-68
+REC_0026,9,limon,,gotas,,,67-68
+REC_0026,10,caldo,2,cucharada,,,67-68
+REC_0026,11,arroz graneado,3,cucharada,,,67-68
+REC_0027,1,pollo,1,pierna mediana,,,69-70
+REC_0027,2,cebolla,1,rodaja,,,69-70
+REC_0027,3,tomate,3,rodaja,,,69-70
+REC_0027,4,ajo molido,,,,,69-70
+REC_0027,5,aceite vegetal,1,cucharadita,,,69-70
+REC_0027,6,brocoli (25 g),1,rama mediana,,,69-70
+REC_0027,7,sal yodada,1,pizca,,,69-70
+REC_0027,8,limon,,gotas,,,69-70
+REC_0027,9,agua,0.125,taza,,,69-70
+REC_0027,10,arroz graneado,3,cucharada,,,69-70
+REC_0028,1,zanahoria,1,rodaja gruesa,,,71-72
+REC_0028,2,brocoli (flor),0.33,rama pequeña,,,71-72
+REC_0028,3,huevo de gallina,0.33,unidad,,,71-72
+REC_0028,4,agua,1,cucharada,,,71-72
+REC_0028,5,harina de trigo,1,cucharada,,,71-72
+REC_0028,6,bazo,1,cucharada,,,71-72
+REC_0028,7,aceite vegetal,1,cucharadita,,,71-72
+REC_0028,8,tomate,2,rodaja,,,71-72
+REC_0028,9,limon,,gotas,,,71-72
+REC_0028,10,sal yodada,1,pizca,,,71-72
+REC_0028,11,arroz graneado,4,cucharada,,,71-72
+REC_0029,1,higado de pollo,1,unidad,,,73-74
+REC_0029,2,trigo sancochado,5,cucharada,,,73-74
+REC_0029,3,zanahoria,1,cucharada,,,73-74
+REC_0029,4,arvejas frescas,1,cucharada,,,73-74
+REC_0029,5,choclo desgranado,1,cucharada,,,73-74
+REC_0029,6,pimiento,0.125,unidad pequeña,,,73-74
+REC_0029,7,aceite vegetal,1,cucharadita,,,73-74
+REC_0029,8,ajo,1,diente,,,73-74
+REC_0029,9,sal yodada,1,pizca,,,73-74
+REC_0029,10,agua,0.125,taza,,,73-74
+REC_0030,1,sangrecita sancochada,2,cucharada,,,75-76
+REC_0030,2,cebolla china,1,cabeza,,,75-76
+REC_0030,3,arroz graneado,5,cucharada,,,75-76
+REC_0030,4,huevo de gallina,1,unidad,,,75-76
+REC_0030,5,aceite vegetal,2,cucharadita,,,75-76
+REC_0030,6,sal yodada,1,pizca,,,75-76

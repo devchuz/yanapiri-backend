@@ -15,45 +15,39 @@ from ..domain.anthropometry import (
 from .llm import answer as llm_answer
 from .guardrails import danger_response
 
+CONSENT_VERSION = "2026-08-v1"
+
 WELCOME = (
-    "👋 ¡Hola! Soy *Yanapiri Wawa*.\n\n"
-    "Si eres madre, padre o cuidador/a, puedo acompañarte a registrar y seguir "
-    "el crecimiento de las niñas y niños menores de 5 años a tu cuidado. 🌱\n\n"
-    "¿Qué deseas hacer hoy?\n\n"
-    "1️⃣ Registrar a una niña o niño\n"
-    "2️⃣ Registrar una nueva medición\n"
-    "3️⃣ Ver su crecimiento y resultados\n"
-    "4️⃣ Hacer una consulta o pedir ayuda\n"
-    "5️⃣ Agregar o cambiar el establecimiento de salud\n\n"
-    "6️⃣ Revisar alertas y seguimiento\n\n"
-    "7️⃣ Seguimiento de suplementos\n\n"
-    "⚡ También puedes escribir REGISTRO RÁPIDO para enviar todos los datos juntos.\n\n"
-    "Responde con el número de una opción.\n\n"
-    "ℹ️ Mi orientación no reemplaza la evaluación del personal de salud."
+    "👋 ¡Hola! Soy *NutriCRED*.\n\n"
+    "Acompaño a madres, padres y personas cuidadoras en el seguimiento del crecimiento infantil.\n\n"
+    "Para comenzar, primero registraremos tus datos como persona cuidadora.\n\n"
+    "1️⃣ Comenzar\n2️⃣ ¿Cómo funciona?"
 )
 
 
+def _first_name(value: str) -> str:
+    return (str(value or "").strip().split() or ["hola"])[0]
+
+
 def _welcome(identity: str) -> str:
+    caregiver = db.obtener_cuidador(identity)
+    if not caregiver:
+        _save(identity, "onboarding", "intro", {})
+        return WELCOME
     children = db.listar_ninos(identity)
     if not children:
-        return WELCOME
-    names = ", ".join(child["full_name"] for child in children[:3])
-    if len(children) > 3:
-        names += f" y {len(children) - 3} más"
+        db.limpiar_estado_conversacion(identity)
+        return (
+            f"👋 Hola, *{_first_name(caregiver['full_name'])}*. Tu registro como persona "
+            "cuidadora está listo.\n\n"
+            "El siguiente paso es registrar a la niña o niño que está bajo tu cuidado.\n\n"
+            "Escribe REGISTRAR para comenzar o PRIVACIDAD para revisar cómo usamos los datos."
+        )
     return (
-        "👋 ¡Hola de nuevo! Soy *Yanapiri Wawa*.\n\n"
-        f"Ya tengo registrado el crecimiento de: *{names}*. 🌱\n\n"
-        "¿Qué deseas hacer hoy?\n\n"
-        "1️⃣ Registrar a otra niña o niño\n"
-        "2️⃣ Registrar una nueva medición\n"
-        "3️⃣ Ver su crecimiento y resultados\n"
-        "4️⃣ Hacer una consulta o pedir ayuda\n"
-        "5️⃣ Agregar o cambiar el establecimiento de salud\n\n"
-        "6️⃣ Revisar alertas y seguimiento\n\n"
-        "7️⃣ Seguimiento de suplementos\n\n"
-        "⚡ Escribe REGISTRO RÁPIDO para agregar otra niña o niño en un solo mensaje.\n\n"
-        "Responde con el número de una opción.\n\n"
-        "ℹ️ Mi orientación no reemplaza la evaluación del personal de salud."
+        f"👋 Hola, *{_first_name(caregiver['full_name'])}*. ¿Qué deseas hacer hoy?\n\n"
+        "📏 Escribe MEDICIÓN para registrar peso y talla.\n"
+        "📈 Escribe ESTADO para ver los últimos registros.\n"
+        "➕ Escribe MÁS OPCIONES para abrir el resto del menú."
     )
 
 
@@ -248,23 +242,28 @@ _QUICK_REGISTRATION_LABELS = {
 }
 
 
-def _quick_registration_template() -> str:
+def _quick_registration_template(caregiver: dict | None = None) -> str:
+    caregiver_lines = (
+        ""
+        if caregiver
+        else "Cuidador: Nombre completo\nRelación: madre, padre u otra persona cuidadora\n"
+    )
     return (
         "⚡ *Registro rápido*\n\n"
         "Copia este formato, completa los datos y envíalo en un solo mensaje:\n\n"
-        "Cuidador: Nombre completo\n"
-        "Relación: madre, padre u otra persona cuidadora\n"
+        f"{caregiver_lines}"
         "Niña o niño: Nombre completo\n"
         "Nacimiento: 18/03/2024\n"
         "Sexo: femenino o masculino\n"
-        "Distrito: Ventanilla\n"
+        f"Distrito: {(caregiver or {}).get('district') or 'Ventanilla'}\n"
         "Establecimiento: nombre, código RENIPRESS o NO LO SÉ\n\n"
-        "Antes de guardar te mostraré un resumen para que lo confirmes. "
-        "Escribe CANCELAR para salir."
+        "Antes de guardar te mostraré un resumen para confirmar. Escribe CANCELAR para salir."
     )
 
 
-def _parse_quick_registration(message: str) -> tuple[dict, list[str]]:
+def _parse_quick_registration(
+    message: str, caregiver: dict | None = None
+) -> tuple[dict, list[str]]:
     """Extrae un registro etiquetado; nunca persiste datos sin confirmación."""
     data: dict = {}
     for part in re.split(r"[\n;]+", str(message or "")):
@@ -275,6 +274,11 @@ def _parse_quick_registration(message: str) -> tuple[dict, list[str]]:
         clean_value = value.strip()
         if key and clean_value:
             data[key] = clean_value
+
+    if caregiver:
+        data["caregiver_name"] = caregiver["full_name"]
+        data["caregiver_relationship"] = caregiver.get("relationship") or "cuidador"
+        data.setdefault("district", caregiver["district"])
 
     errors: list[str] = []
     relationship = _caregiver_relationship(data.get("caregiver_relationship", ""))
@@ -503,7 +507,7 @@ def _family_app_link() -> str:
 
 
 def _family_result_message(child_name: str, saved: dict) -> str:
-    """Reporte breve para familias; el detalle técnico queda en Supabase."""
+    """Resumen corto para familias; el detalle técnico queda en la aplicación."""
     result = saved["assessment"]
     measurement = saved["measurement"]
     level = result["semaforo"]
@@ -514,37 +518,23 @@ def _family_result_message(child_name: str, saved: dict) -> str:
         "rojo": "🔴 Se recomienda atención prioritaria",
     }
     actions = {
-        "verde": (
-            "• Continúa con sus controles de crecimiento.\n"
-            "• Registra la próxima medición para observar cómo cambia en el tiempo."
-        ),
-        "amarillo": (
-            "• Repite el peso y la talla para confirmar los valores.\n"
-            "• Coordina un control con su establecimiento de salud."
-        ),
-        "rojo": (
-            "• Comunícate con su establecimiento de salud para una valoración prioritaria.\n"
-            "• Si observas hinchazón en ambos pies o algún signo de peligro, acude hoy."
-        ),
+        "verde": "📅 Mantén al día sus controles de crecimiento.",
+        "amarillo": "🏥 Confirma esta medición en su establecimiento de salud.",
+        "rojo": "🚨 Busca una valoración presencial prioritaria. Si presenta signos de peligro, acude hoy.",
     }
     notes = ""
     if result["age_days"] < 183 and measurement.get("muac_mm") is not None:
         notes = (
-            "\n\nℹ️ Por su edad, el perímetro del brazo quedó registrado como referencia, "
-            "pero no se utilizó para orientar el resultado."
+            "\nℹ️ Por su edad, el perímetro del brazo se guardó, pero no orientó el resultado."
         )
     return (
         f"✅ *Medición guardada para {child_name}*\n\n"
-        "🏠 Fuente: reportada por la persona cuidadora\n"
-        "🔎 Estado: orientación preliminar, pendiente de confirmación clínica\n\n"
         f"📅 Fecha: {_display_date(measurement['measured_at'])}\n"
         f"⚖️ Peso: {measurement['weight_kg']} kg\n"
         f"📏 {position.capitalize()}: {measurement['height_cm']} cm\n\n"
-        f"*{headings[level]}*\n\n"
-        f"*¿Qué puedes hacer ahora?*\n{actions[level]}{notes}\n\n"
-        "Esta medición no reemplaza ni modifica la referencia registrada por personal de salud. "
-        "El personal podrá revisarla y registrar una medición clínica independiente.\n"
-        "Esta orientación no reemplaza una evaluación profesional."
+        f"*{headings[level]}*\n"
+        f"{actions[level]}{notes}\n\n"
+        "🏠 orientación preliminar basada en una medición familiar; debe confirmarse por personal de salud."
         f"{_family_app_link()}"
     )
 
@@ -553,21 +543,173 @@ def _save(identity: str, flow: str, step: str, data: dict) -> None:
     db.guardar_estado_conversacion(identity, {"flow": flow, "step": step, "data": data})
 
 
-def _start_registration(identity: str) -> str:
-    _save(identity, "registration", "caregiver_relationship", {})
+def _privacy_message() -> str:
     return (
-        "Primero identificaré a la persona adulta que está conversando conmigo. "
-        "Luego registraremos a la niña o niño.\n\n"
-        "¿Cuál es tu relación con la niña o niño?\n"
-        "1️⃣ Madre\n2️⃣ Padre\n3️⃣ Otra persona cuidadora\n\n"
-        "Si prefieres enviar toda la información junta, escribe REGISTRO RÁPIDO.\n"
-        "Escribe CANCELAR para salir."
+        "🔐 *Uso de tus datos*\n\n"
+        "Guardamos tus datos de contacto y los registros infantiles para dar seguimiento al "
+        "crecimiento. El personal autorizado del establecimiento vinculado podrá revisarlos.\n\n"
+        "Puedes dejar de usar el bot o solicitar al equipo la revisión de tus datos. "
+        "Este servicio orienta y no reemplaza la atención profesional."
     )
 
 
+def _consent_prompt() -> str:
+    return (
+        _privacy_message()
+        + "\n\n¿Aceptas continuar con el registro como persona cuidadora? Responde SÍ o NO."
+    )
+
+
+def _start_onboarding(identity: str, *, show_intro: bool = True) -> str:
+    step = "intro" if show_intro else "consent"
+    _save(identity, "onboarding", step, {})
+    return WELCOME if show_intro else _consent_prompt()
+
+
+def _onboarding_step(identity: str, state: dict, message: str) -> str:
+    step = state["step"]
+    data = state.get("data", {})
+    choice = _plain(message)
+    if step == "intro":
+        if choice in {"1", "comenzar", "empezar", "registrarme"}:
+            _save(identity, "onboarding", "consent", data)
+            return _consent_prompt()
+        if choice in {"2", "como funciona", "informacion", "información"}:
+            _save(identity, "onboarding", "consent", data)
+            return (
+                "🌱 Registrarás a las niñas o niños a tu cuidado y podrás guardar mediciones "
+                "hechas en casa. Estas serán preliminares hasta que personal de salud las confirme.\n\n"
+                + _consent_prompt()
+            )
+        return "Elige COMENZAR o ¿CÓMO FUNCIONA? para continuar."
+    if step == "consent":
+        accepted = _yes_no(message)
+        if accepted is None:
+            return "Responde SÍ para continuar o NO para salir."
+        if not accepted:
+            db.limpiar_estado_conversacion(identity)
+            return "De acuerdo. No guardé datos personales. Puedes escribir HOLA cuando desees volver."
+        data["consent_version"] = CONSENT_VERSION
+        _save(identity, "onboarding", "relationship", data)
+        return "Paso 1 de 3. ¿Cuál es tu relación con la niña o niño?"
+    if step == "relationship":
+        relationship = _caregiver_relationship(message)
+        if not relationship:
+            return "Elige MADRE, PADRE u OTRA PERSONA CUIDADORA."
+        data["relationship"] = relationship
+        _save(identity, "onboarding", "name", data)
+        return "Paso 2 de 3. ¿Cuál es tu nombre completo?"
+    if step == "name":
+        if len(message.strip()) < 2:
+            return "Escribe tu nombre completo."
+        data["full_name"] = message.strip()
+        _save(identity, "onboarding", "district", data)
+        return "Paso 3 de 3. ¿En qué distrito vive tu familia?"
+    if step == "district":
+        if len(message.strip()) < 2:
+            return "Escribe el distrito donde vive tu familia."
+        data["district"] = message.strip()
+        _save(identity, "onboarding", "confirm", data)
+        relationship = {
+            "madre": "Madre",
+            "padre": "Padre",
+            "cuidador": "Otra persona cuidadora",
+        }[data["relationship"]]
+        return (
+            "📝 *Revisa tu registro*\n\n"
+            f"Nombre: {data['full_name']}\n"
+            f"Relación: {relationship}\n"
+            f"Distrito: {data['district']}\n\n"
+            "¿Los datos son correctos? Responde SÍ o NO."
+        )
+    confirmed = _yes_no(message)
+    if confirmed is None:
+        return "Responde SÍ para guardar o NO para corregir."
+    if not confirmed:
+        _save(identity, "onboarding", "relationship", {"consent_version": CONSENT_VERSION})
+        return "De acuerdo, corrijamos el registro. ¿Cuál es tu relación con la niña o niño?"
+    caregiver = db.registrar_cuidador(
+        whatsapp_identity=identity,
+        full_name=data["full_name"],
+        relationship=data["relationship"],
+        district=data["district"],
+        consent_version=data.get("consent_version", CONSENT_VERSION),
+    )
+    _save(identity, "caregiver_child_offer", "confirm", {})
+    return (
+        f"✅ Listo, {_first_name(caregiver['full_name'])}. Tu registro como persona cuidadora está listo.\n\n"
+        "¿Deseas registrar ahora a una niña o niño bajo tu cuidado?"
+    )
+
+
+def _caregiver_child_offer_step(identity: str, message: str) -> str:
+    decision = _yes_no(message)
+    if decision is None:
+        return "Responde SÍ para registrar a una niña o niño o NO para hacerlo después."
+    if decision:
+        return _start_registration(identity)
+    db.limpiar_estado_conversacion(identity)
+    return (
+        "De acuerdo. Cuando quieras continuar, escribe REGISTRAR.\n\n"
+        "📅 Recuerda mantener al día los controles de crecimiento infantil."
+    )
+
+
+def _more_options(identity: str) -> str:
+    if not db.obtener_cuidador(identity):
+        return _start_onboarding(identity, show_intro=False)
+    _save(identity, "more_menu", "action", {})
+    return (
+        "➕ *Más opciones*\n\n"
+        "1️⃣ Registrar otra niña o niño\n"
+        "2️⃣ Alertas y seguimiento\n"
+        "3️⃣ Suplementos\n"
+        "4️⃣ Establecimiento de salud\n"
+        "5️⃣ Ayuda y privacidad\n"
+        "6️⃣ Registro rápido"
+    )
+
+
+def _more_options_step(identity: str, message: str) -> str:
+    choice = _plain(message)
+    if choice in {"1", "registrar", "registrar nino", "registrar nina"}:
+        return _start_registration(identity)
+    if choice in {"2", "alertas", "seguimiento"}:
+        return _start_followup(identity)
+    if choice in {"3", "suplementos", "suplemento"}:
+        return _start_supplement(identity)
+    if choice in {"4", "establecimiento", "centro de salud"}:
+        return _start_health_center_update(identity)
+    if choice in {"5", "ayuda", "privacidad"}:
+        db.limpiar_estado_conversacion(identity)
+        return _privacy_message() + "\n\nEscribe INICIO para volver al menú principal."
+    if choice in {"6", "registro rapido", "registrar rapido"}:
+        return _start_quick_registration(identity)
+    return "Elige una opción de la lista o escribe INICIO para volver."
+
+
+def _start_registration(identity: str) -> str:
+    caregiver = db.obtener_cuidador(identity)
+    if not caregiver:
+        return _start_onboarding(identity, show_intro=False)
+    data = {
+        "caregiver_name": caregiver["full_name"],
+        "caregiver_relationship": caregiver.get("relationship") or "cuidador",
+        "district": caregiver["district"],
+    }
+    _save(identity, "registration", "child_name", data)
+    return "👧🏽 ¿Cuál es el nombre de la niña o niño que deseas registrar?"
+
+
 def _start_quick_registration(identity: str) -> str:
+    caregiver = db.obtener_cuidador(identity)
+    if not caregiver:
+        return (
+            _start_onboarding(identity, show_intro=False)
+            + "\n\nDespués podrás usar REGISTRO RÁPIDO para registrar a la niña o niño."
+        )
     _save(identity, "quick_registration", "input", {})
-    return _quick_registration_template()
+    return _quick_registration_template(caregiver)
 
 
 def _finish_registration(identity: str, data: dict) -> str:
@@ -589,20 +731,20 @@ def _finish_registration(identity: str, data: dict) -> str:
     )
     return (
         f"{confirmation}\n\n"
-        "¿Deseas registrar ahora su primera medición de peso y talla? "
-        "Responde SÍ o NO."
+        "¿Deseas registrar ahora su primera medición de peso y talla?"
     )
 
 
 def _quick_registration_step(identity: str, state: dict, message: str) -> str:
     if state["step"] == "input":
-        data, errors = _parse_quick_registration(message)
+        caregiver = db.obtener_cuidador(identity)
+        data, errors = _parse_quick_registration(message, caregiver)
         if errors:
             missing = "\n".join(f"• {item}" for item in errors)
             return (
                 "No pude completar el registro. Revisa estos datos:\n"
                 f"{missing}\n\n"
-                + _quick_registration_template()
+                + _quick_registration_template(caregiver)
             )
         _save(identity, "quick_registration", "consent", data)
         return _registration_summary(data)
@@ -664,10 +806,18 @@ def _start_measurement_for_child(
     return f"Mediremos a {child_name}. ¿Cuál es su peso en kg? Ejemplo: 10.4"
 
 
-def _status(identity: str) -> str:
+def _status(identity: str, selected_child: dict | None = None) -> str:
     children = db.listar_ninos(identity)
     if not children:
         return "Aún no hay niñas o niños registrados. Escribe REGISTRAR para comenzar."
+    if selected_child is None and len(children) > 1:
+        options = "\n".join(
+            f"{index}. {child['full_name']}" for index, child in enumerate(children, 1)
+        )
+        _save(identity, "status", "select_child", {"children": children})
+        return f"¿De quién deseas ver el crecimiento?\n{options}"
+    if selected_child is not None:
+        children = [selected_child]
     labels = {
         "verde": "🟢 sin señales de alerta",
         "amarillo": "🟡 conviene revisar la medición",
@@ -719,9 +869,20 @@ def _status(identity: str) -> str:
         + "\n\n".join(sections)
         + "\n\nAquí mostramos como máximo las dos mediciones más recientes. "
         "Consulta la trayectoria completa y sus gráficos en la aplicación. "
-        "Esta orientación no reemplaza la evaluación del personal de salud."
+        "Esta orientación no reemplaza la evaluación del personal de salud.\n\n"
+        "📅 Mantén al día sus controles de crecimiento."
         + _family_app_link()
     )
+
+
+def _status_step(identity: str, state: dict, message: str) -> str:
+    children = (state.get("data") or {}).get("children") or []
+    try:
+        child = children[int(message.strip()) - 1]
+    except (ValueError, IndexError):
+        return "Elige el nombre de la niña o niño que deseas revisar."
+    db.limpiar_estado_conversacion(identity)
+    return _status(identity, child)
 
 
 def _followup_menu(data: dict) -> str:
@@ -1339,17 +1500,28 @@ def _registration_step(identity: str, state: dict, message: str) -> str:
         if not value:
             return "No pude identificarlo. Responde NIÑA/FEMENINO/F o NIÑO/MASCULINO/M."
         data["sex"] = value
-        _save(identity, "registration", "district", data)
-        return "¿En qué distrito vive la familia?"
+        _save(identity, "registration", "district_confirm", data)
+        return f"¿La niña o niño vive también en {data['district']}?"
+    if step == "district_confirm":
+        same_district = _yes_no(message)
+        if same_district is True:
+            _save(identity, "registration", "health_center", data)
+            return _health_center_prompt(data["child_name"])
+        if same_district is False or _plain(message) in {"otro", "otro distrito"}:
+            _save(identity, "registration", "district", data)
+            return "¿En qué distrito vive la niña o niño?"
+        # También se acepta escribir directamente un distrito diferente.
+        if len(message.strip()) >= 2:
+            data["district"] = message.strip()
+            _save(identity, "registration", "health_center", data)
+            return _health_center_prompt(data["child_name"])
+        return "Responde SÍ, NO o escribe directamente el distrito."
     if step == "district":
         if len(message.strip()) < 2:
-            return "Escribe el distrito donde vive la familia."
+            return "Escribe el distrito donde vive la niña o niño."
         data["district"] = message.strip()
         _save(identity, "registration", "health_center", data)
-        return (
-            "¿En qué establecimiento de salud se controla? Escribe su nombre o código RENIPRESS. "
-            "También puedes responder NO LO SÉ, NO RECUERDO u OMITIR. Podrás agregarlo después."
-        )
+        return _health_center_prompt(data["child_name"])
     if step == "health_center":
         data["reported_health_center"] = None if _unknown_or_omit(message) else message.strip()
         _save(identity, "registration", "consent", data)
@@ -1515,15 +1687,12 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
         )
         return (
             f"✅ *Guardé la medición de {data['child_name']} como pendiente de confirmar*\n\n"
-            "🏠 Fuente: reportada por la persona cuidadora\n"
             f"📅 Fecha: {_display_date(measurement['measured_at'])}\n"
             f"⚖️ Peso reportado: {measurement['weight_kg']} kg\n"
             f"📏 Talla reportada: {measurement['height_cm']} cm\n\n"
-            "⚠️ *Necesitamos comprobar las medidas*\n"
-            "La combinación de peso, talla y edad parece poco probable. Puede deberse a un error "
-            "al medir, escribir el valor o elegir la unidad.\n\n"
-            "La conservé para revisión, pero no le asigné color ni generé una alerta clínica. "
-            "Vuelve a medir y escribe MEDICIÓN para registrar un valor confirmado."
+            "⚠️ La combinación necesita comprobarse. La guardé para revisión, pero no le asigné "
+            "color ni generé una alerta clínica.\n\n"
+            "🏥 Repite la medición o confírmala en su establecimiento de salud."
             f"{urgent}{_family_app_link()}"
         )
     except ValueError as exc:
@@ -1542,18 +1711,36 @@ def respond(message: str, identity: str) -> str:
     message = str(message or "").strip()
     if not message:
         return _welcome(identity)
-    db.guardar_mensaje(identity, "user", message)
+    # Antes del consentimiento solo se conserva el estado temporal necesario
+    # para continuar el diálogo; el historial empieza cuando el cuidador existe.
+    persist_history = db.obtener_cuidador(identity) is not None
+    if persist_history:
+        db.guardar_mensaje(identity, "user", message)
     state = db.estado_conversacion(identity)
     command = _plain(message)
     if command in {"cancelar", "salir"}:
         db.limpiar_estado_conversacion(identity)
         answer = "Operación cancelada.\n\n" + _welcome(identity)
+    elif command in {"inicio", "volver", "volver al inicio"}:
+        db.limpiar_estado_conversacion(identity)
+        answer = _welcome(identity)
+    elif command in {"privacidad", "mis datos", "uso de datos"}:
+        db.limpiar_estado_conversacion(identity)
+        answer = _privacy_message() + "\n\nEscribe INICIO para volver."
     elif command in {"registro rapido", "registrar rapido", "registro completo"}:
         answer = _start_quick_registration(identity)
     elif danger_response(message) and not (
         state.get("flow") == "measurement" and state.get("step") == "edema"
     ):
         answer = danger_response(message) or _welcome(identity)
+    elif state.get("flow") == "onboarding":
+        answer = _onboarding_step(identity, state, message)
+    elif state.get("flow") == "caregiver_child_offer":
+        answer = _caregiver_child_offer_step(identity, message)
+    elif state.get("flow") == "more_menu":
+        answer = _more_options_step(identity, message)
+    elif state.get("flow") == "status":
+        answer = _status_step(identity, state, message)
     elif state.get("flow") == "registration":
         answer = _registration_step(identity, state, message)
     elif state.get("flow") == "quick_registration":
@@ -1593,6 +1780,8 @@ def respond(message: str, identity: str) -> str:
         answer = _status(identity)
     elif command in {"4", "ayuda", "menu", "inicio", "hola"}:
         answer = _welcome(identity)
+    elif command in {"mas opciones", "otras opciones", "ver opciones"}:
+        answer = _more_options(identity)
     elif command in {
         "5",
         "establecimiento",
@@ -1654,5 +1843,6 @@ def respond(message: str, identity: str) -> str:
             answer = faq["answer"] if faq and classified["confidence"] > 0 else None
             if answer is None:
                 answer = llm_answer(message, identity) or _welcome(identity)
-    db.guardar_mensaje(identity, "assistant", answer)
+    if persist_history or db.obtener_cuidador(identity) is not None:
+        db.guardar_mensaje(identity, "assistant", answer)
     return answer

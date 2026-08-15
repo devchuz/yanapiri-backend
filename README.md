@@ -1,6 +1,6 @@
-# NutriAcompaña API
+# NutriCRED API
 
-Backend del canal familiar de **Yanapiri Wawa** para el reto 5 “Crecer Mejor”.
+Backend del canal familiar de **NutriCRED** para el reto 5 “Crecer Mejor”.
 Recibe mensajes de WhatsApp mediante Kapso, guía el registro de niñas y niños
 menores de 5 años, calcula indicadores antropométricos OMS y comparte con la app
 clínica una base Supabase común.
@@ -25,7 +25,7 @@ clínica una base Supabase común.
 
 ### 1. Objetivo común
 
-Yanapiri Wawa busca conectar dos experiencias que comparten la misma información:
+NutriCRED busca conectar dos experiencias que comparten la misma información:
 
 - **Canal familiar:** una conversación por WhatsApp que ayuda a registrar a la
   niña o niño, guía la toma de medidas y devuelve una orientación comprensible.
@@ -70,7 +70,7 @@ La separación es intencional:
 
 El flujo principal que debe funcionar de extremo a extremo es el siguiente:
 
-1. La familia escribe al número de WhatsApp de Yanapiri Wawa.
+1. La familia escribe al número de WhatsApp de NutriCRED.
 2. Kapso envía el evento a `POST /webhooks/kapso`.
 3. La API valida la firma, evita duplicados y encola el mensaje por identidad.
 4. El bot solicita datos de la persona cuidadora y de la niña o niño.
@@ -478,7 +478,10 @@ curl -X POST http://localhost:7860/chat \
   -d '{"identidad":"familia-demo","mensaje":"hola"}'
 ```
 
-Documentación interactiva: `http://localhost:7860/docs`.
+Documentación interactiva: `http://localhost:7860/docs` (Swagger) y
+`http://localhost:7860/redoc` (ReDoc). El contrato, autenticación y ejemplos de
+cada endpoint están resumidos en [`docs/api.md`](docs/api.md); la especificación
+OpenAPI para generar clientes está en `http://localhost:7860/openapi.json`.
 
 ## Supabase y la app clínica
 

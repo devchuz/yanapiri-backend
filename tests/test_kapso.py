@@ -22,6 +22,23 @@ def test_extracts_text_event():
     assert main._extract_kapso(event) == ("51999999999", "Hola", "wamid.123")
 
 
+def test_extracts_interactive_reply_id_instead_of_visible_title():
+    event = {
+        "message": {
+            "id": "wamid.button",
+            "type": "interactive",
+            "from": "51999999999",
+            "interactive": {
+                "type": "button_reply",
+                "button_reply": {"id": "si", "title": "Sí, guardar"},
+            },
+            "kapso": {"direction": "inbound"},
+        },
+        "conversation": {},
+    }
+    assert main._extract_kapso(event) == ("51999999999", "si", "wamid.button")
+
+
 def test_prefers_phone_when_phone_and_bsuid_are_available():
     event = {
         "message": {

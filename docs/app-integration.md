@@ -1,4 +1,4 @@
-# Integración con la app clínica Yanapiri Wawa
+# Integración con la app clínica NutriCRED
 
 Revisión del bundle público desplegado el 2026-08-12:
 

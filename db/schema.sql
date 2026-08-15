@@ -1,4 +1,4 @@
--- Yanapiri Wawa — esquema único del equipo.
+-- NutriCRED — esquema único del equipo.
 -- Ejecutar completo en Supabase SQL Editor. Timestamps en UTC (timestamptz).
 
 create extension if not exists pgcrypto;
@@ -39,6 +39,8 @@ create table if not exists public.caregivers (
   full_name text not null,
   district text not null,
   consent_at timestamptz not null,
+  consent_version text not null default '2026-08-v1',
+  consent_withdrawn_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -46,6 +48,12 @@ create table if not exists public.caregivers (
 -- Migración idempotente para proyectos creados con una versión anterior.
 alter table public.caregivers
   add column if not exists relationship text not null default 'cuidador';
+
+alter table public.caregivers
+  add column if not exists consent_version text not null default '2026-08-v1';
+
+alter table public.caregivers
+  add column if not exists consent_withdrawn_at timestamptz;
 
 create table if not exists public.children (
   id uuid primary key default gen_random_uuid(),

@@ -1,4 +1,4 @@
-"""Configuración central de NutriAcompaña."""
+"""Configuración central de NutriCRED."""
 
 import os
 from pathlib import Path

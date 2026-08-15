@@ -11,13 +11,13 @@ def setup_function():
     db.reset_memory()
 
 
-def test_welcome_is_warm_and_keeps_numbered_actions():
+def test_welcome_is_warm_and_starts_caregiver_onboarding():
     welcome = respond("hola", "welcome-test")
     assert "👋" in welcome
-    assert "Yanapiri Wawa" in welcome
-    assert "1️⃣ Registrar" in welcome
-    assert "2️⃣ Registrar una nueva medición" in welcome
-    assert "personal de salud" in welcome
+    assert "NutriCRED" in welcome
+    assert "1️⃣ Comenzar" in welcome
+    assert "2️⃣ ¿Cómo funciona?" in welcome
+    assert db.estado_conversacion("welcome-test")["flow"] == "onboarding"
 
 
 def test_registered_family_gets_personalized_welcome():
@@ -31,22 +31,93 @@ def test_registered_family_gets_personalized_welcome():
         district="Lima",
     )
     welcome = respond("hola", identity)
-    assert "Hola de nuevo" in welcome
-    assert "Mateo" in welcome
-    assert "Registrar a otra" in welcome
+    assert "Hola, *Rosa*" in welcome
+    assert "MEDICIÓN" in welcome
+    assert "MÁS OPCIONES" in welcome
+
+
+def test_caregiver_is_registered_before_child_and_only_after_consent():
+    identity = "caregiver-first"
+    respond("hola", identity)
+    respond("1", identity)
+    assert db.obtener_cuidador(identity) is None
+
+    respond("sí", identity)
+    respond("madre", identity)
+    respond("Delia Gamonal", identity)
+    confirmation = respond("Ventanilla", identity)
+    assert "Revisa tu registro" in confirmation
+    assert db.obtener_cuidador(identity) is None
+
+    offer = respond("sí", identity)
+    caregiver = db.obtener_cuidador(identity)
+    assert caregiver["full_name"] == "Delia Gamonal"
+    assert caregiver["consent_version"] == "2026-08-v1"
+    assert db.listar_ninos(identity) == []
+    assert "registrar ahora" in offer.lower()
+
+
+def test_declining_onboarding_does_not_store_personal_data():
+    identity = "declined-onboarding"
+    respond("hola", identity)
+    respond("comenzar", identity)
+    answer = respond("no", identity)
+    assert "No guardé datos personales" in answer
+    assert db.obtener_cuidador(identity) is None
+    assert db.historial_conversacion(identity) == []
+    assert db.estado_conversacion(identity) == {}
+
+
+def test_more_options_is_compact_and_routes_to_registration():
+    identity = "compact-more-menu"
+    db.registrar_cuidador(
+        whatsapp_identity=identity,
+        full_name="Rosa",
+        relationship="madre",
+        district="Lima",
+    )
+    menu = respond("MÁS OPCIONES", identity)
+    assert "Más opciones" in menu
+    assert "6️⃣ Registro rápido" in menu
+    next_message = respond("1", identity)
+    assert "nombre de la niña o niño" in next_message
+
+
+def test_status_asks_for_child_instead_of_dumping_multiple_trajectories():
+    identity = "compact-multiple-status"
+    for name, days, sex in (("Mateo", 400, "M"), ("Lucía", 600, "F")):
+        db.registrar_nino(
+            whatsapp_identity=identity,
+            caregiver_name="Rosa",
+            child_name=name,
+            birth_date=(date.today() - timedelta(days=days)).isoformat(),
+            sex=sex,
+            district="Lima",
+        )
+    prompt = respond("ESTADO", identity)
+    assert "¿De quién deseas ver" in prompt
+    result = respond("2", identity)
+    assert "Lucía está registrado/a" in result
+    assert "Mateo está registrado/a" not in result
 
 
 def test_registration_and_measurement_flow_in_memory():
     identity = "family-test"
     birth = (date.today() - timedelta(days=365)).isoformat()
 
-    assert "relación" in respond("registrar", identity).lower()
+    assert "uso de tus datos" in respond("registrar", identity).lower()
+    assert "relación" in respond("sí", identity).lower()
     assert "nombre" in respond("madre", identity).lower()
     respond("María Quispe", identity)
+    caregiver_confirmation = respond("San Juan de Lurigancho", identity)
+    assert "revisa tu registro" in caregiver_confirmation.lower()
+    assert "registrar ahora" in respond("sí", identity).lower()
+    assert "nombre" in respond("sí", identity).lower()
     respond("Lucía", identity)
     respond(birth, identity)
-    respond("F", identity)
-    prompt = respond("San Juan de Lurigancho", identity)
+    district_confirmation = respond("F", identity)
+    assert "San Juan de Lurigancho" in district_confirmation
+    prompt = respond("sí", identity)
     assert "establecimiento" in prompt.lower()
     confirmation = respond("omitir", identity)
     assert "autoriza" in confirmation.lower()
@@ -79,8 +150,8 @@ def test_registration_and_measurement_flow_in_memory():
 
 def test_natural_registration_action_starts_caregiver_flow():
     answer = respond("Quiero registrar a mi hija", "natural-registration")
-    assert "persona adulta" in answer
-    assert "Madre" in answer
+    assert "Uso de tus datos" in answer
+    assert "persona cuidadora" in answer
 
 
 def test_natural_height_action_prefills_height_and_requests_weight():
@@ -125,16 +196,20 @@ def test_registration_accepts_natural_birth_sex_and_unknown_center():
         "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
     ]
     respond("Quiero registrar a mi hija", identity)
+    respond("sí", identity)
     respond("soy su mamá", identity)
     respond("Carla Ruiz", identity)
+    respond("Ventanilla", identity)
+    respond("sí", identity)
+    respond("sí", identity)
     respond("Valentina", identity)
     sex_prompt = respond(
         f"Nació el {birth.day} de {months[birth.month - 1]} de {birth.year}", identity
     )
     assert "sexo" in sex_prompt.lower()
     district_prompt = respond("es una niña", identity)
-    assert "distrito" in district_prompt.lower()
-    respond("Ventanilla", identity)
+    assert "Ventanilla" in district_prompt
+    respond("sí", identity)
     confirmation = respond("No lo sé por ahora", identity)
     assert birth.strftime("%d/%m/%Y") in confirmation
     assert "Sexo registrado: Femenino" in confirmation
@@ -585,6 +660,12 @@ def test_missing_followup_migration_exits_flow_without_losing_alert(monkeypatch)
 def test_quick_registration_accepts_all_data_and_confirms_before_saving():
     identity = "quick-registration"
     birth = (date.today() - timedelta(days=420)).strftime("%d/%m/%Y")
+    db.registrar_cuidador(
+        whatsapp_identity=identity,
+        full_name="Rosa Quispe",
+        relationship="madre",
+        district="Ventanilla",
+    )
     prompt = respond("REGISTRO RÁPIDO", identity)
     assert "Copia este formato" in prompt
 

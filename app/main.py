@@ -1,4 +1,4 @@
-"""API de NutriAcompaña: FastAPI, cola FIFO por identidad y webhook Kapso v2."""
+"""API de NutriCRED: FastAPI, cola FIFO por identidad y webhook Kapso v2."""
 
 from __future__ import annotations
 
@@ -10,30 +10,64 @@ import random
 import re
 from contextlib import asynccontextmanager
 from datetime import date, datetime
+from typing import Literal
 from uuid import uuid4
 
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel, ConfigDict, Field
 
-from .agent import yachay_agent
+from .agent import nutricred_agent
 from .core import clasificador, config, db
 from .domain.anthropometry import AnthropometryError, assess_child
+from .services.whatsapp_ui import Presentation, build_presentation, interactive_payload
 
 _SEM = asyncio.Semaphore(config.MAX_CONCURRENT_MESSAGES)
 _queues: dict[str, asyncio.Queue[str]] = {}
 _active_workers: set[str] = set()
+
+_OPENAPI_TAGS = [
+    {
+        "name": "Servicio",
+        "description": "Portada y estado operativo de la API.",
+    },
+    {
+        "name": "Bot familiar",
+        "description": (
+            "Simulación directa del asistente familiar. No sustituye el webhook de WhatsApp "
+            "y no debe exponerse públicamente sin controles adicionales."
+        ),
+    },
+    {
+        "name": "Antropometría",
+        "description": (
+            "Vista previa determinista con tablas OMS. No persiste datos ni constituye diagnóstico."
+        ),
+    },
+    {
+        "name": "Profesionales de salud",
+        "description": (
+            "Historial, mediciones verificadas, citas y consultas. Requiere un access token "
+            "de Supabase y membresía en el establecimiento del niño."
+        ),
+    },
+    {
+        "name": "Kapso",
+        "description": "Recepción de eventos WhatsApp firmados por Kapso.",
+    },
+]
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     config.validar_entorno()
     clasificador.init()
-    yachay_agent.init()
+    nutricred_agent.init()
     print(
-        "[nutriacompana] listo | "
-        f"env={config.APP_ENV} modo={yachay_agent.modo()} supabase={db.usando_supabase()} "
+        "[nutricred] listo | "
+        f"env={config.APP_ENV} modo={nutricred_agent.modo()} supabase={db.usando_supabase()} "
         f"gateway={'kapso' if config.usando_kapso() else 'mock'}"
     )
     yield
@@ -42,64 +76,170 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="NutriAcompaña API",
-    version="0.1.0",
-    description="Canal familiar de Yanapiri Wawa para el reto 5 Crecer Mejor.",
+    title="NutriCRED API",
+    version="0.2.0",
+    description=(
+        """
+API de **NutriCRED** para el reto 5 *Crecer Mejor*.
+
+Integra el bot familiar de WhatsApp, evaluación antropométrica determinista,
+trayectorias diferenciadas por fuente, alertas, citas y acceso clínico.
+
+### Autenticación clínica
+
+Las rutas `/clinical/*` requieren un **access token de Supabase**:
+
+```http
+Authorization: Bearer <supabase_access_token>
+```
+
+El usuario también debe pertenecer a `health_center_members`. Las mediciones
+familiares son preliminares; solamente las registradas por personal autorizado
+se consideran verificadas. Ninguna respuesta de esta API constituye por sí sola
+un diagnóstico médico.
+        """
+    ),
+    openapi_tags=_OPENAPI_TAGS,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
     lifespan=lifespan,
 )
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[],
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type", "X-Webhook-Event", "X-Webhook-Signature"],
+    allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-Webhook-Event",
+        "X-Webhook-Signature",
+    ],
 )
+
+_clinical_bearer = HTTPBearer(
+    auto_error=False,
+    scheme_name="SupabaseBearer",
+    description="Access token de una sesión autenticada de Supabase.",
+)
+
+_CLINICAL_RESPONSES = {
+    401: {"description": "Token ausente, inválido o vencido."},
+    403: {"description": "El profesional no pertenece al establecimiento asignado."},
+    404: {"description": "Niño, medición o cita no encontrada."},
+    422: {"description": "Datos o transición de estado no válidos."},
+    503: {"description": "Supabase no está configurado o la migración requerida no fue aplicada."},
+}
 
 
 class ChatIn(BaseModel):
-    mensaje: str
-    identidad: str = "demo-familia"
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "mensaje": "Registrar medición: peso 10.4 kg, talla 82 cm, acostado, MUAC 128 mm, edema no",
+                "identidad": "familia-demo",
+            }
+        }
+    )
+
+    mensaje: str = Field(min_length=1, max_length=4000, description="Mensaje de la persona cuidadora.")
+    identidad: str = Field(
+        default="demo-familia",
+        min_length=1,
+        max_length=160,
+        description="Identidad de conversación de prueba; en WhatsApp la obtiene el webhook.",
+    )
 
 
 class AssessmentIn(BaseModel):
-    birth_date: date
-    measured_at: date = Field(default_factory=date.today)
-    sex: str
-    weight_kg: float
-    height_cm: float
-    height_mode: str
-    muac_mm: float | None = None
-    bilateral_edema: bool = False
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "birth_date": "2025-01-01",
+                "measured_at": "2026-01-01",
+                "sex": "F",
+                "weight_kg": 8.9,
+                "height_cm": 74.0,
+                "height_mode": "length",
+                "muac_mm": 120,
+                "bilateral_edema": False,
+            }
+        }
+    )
+
+    birth_date: date = Field(description="Fecha de nacimiento del niño o niña.")
+    measured_at: date = Field(default_factory=date.today, description="Fecha de la medición.")
+    sex: Literal["M", "F"] = Field(description="Sexo usado para seleccionar la tabla OMS.")
+    weight_kg: float = Field(gt=0, le=100, description="Peso en kilogramos.")
+    height_cm: float = Field(ge=10, le=250, description="Longitud o talla en centímetros.")
+    height_mode: Literal["length", "height"] = Field(
+        description="`length`: acostado/a; `height`: de pie."
+    )
+    muac_mm: float | None = Field(default=None, ge=10, le=1000, description="MUAC en milímetros.")
+    bilateral_edema: bool = Field(default=False, description="Edema observado en ambos pies.")
 
 
 class ClinicalMeasurementIn(BaseModel):
-    measured_at: date = Field(default_factory=date.today)
-    weight_kg: float
-    height_cm: float
-    height_mode: str
-    muac_mm: float | None = None
-    bilateral_edema: bool = False
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "measured_at": "2026-08-15",
+                "weight_kg": 9.1,
+                "height_cm": 75.0,
+                "height_mode": "length",
+                "muac_mm": 121,
+                "bilateral_edema": False,
+            }
+        }
+    )
+
+    measured_at: date = Field(default_factory=date.today, description="Fecha de la medición clínica.")
+    weight_kg: float = Field(gt=0, le=100, description="Peso en kilogramos.")
+    height_cm: float = Field(ge=10, le=250, description="Longitud o talla en centímetros.")
+    height_mode: Literal["length", "height"] = Field(description="Posición de medición.")
+    muac_mm: float | None = Field(default=None, ge=10, le=1000, description="MUAC en milímetros.")
+    bilateral_edema: bool = Field(default=False, description="Edema observado en ambos pies.")
 
 
 class AppointmentIn(BaseModel):
-    scheduled_at: datetime
-    appointment_type: str = "growth_control"
-    notes: str | None = Field(default=None, max_length=500)
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "scheduled_at": "2026-08-20T15:00:00-05:00",
+                "appointment_type": "growth_control",
+                "notes": "Control CRED",
+            }
+        }
+    )
+
+    scheduled_at: datetime = Field(description="Fecha y hora con zona horaria.")
+    appointment_type: Literal[
+        "growth_control", "nutrition", "vaccination", "pediatrics", "other"
+    ] = Field(default="growth_control", description="Motivo general de la cita.")
+    notes: str | None = Field(default=None, max_length=500, description="Nota clínica breve.")
 
 
 class AppointmentStatusIn(BaseModel):
-    status: str
+    status: Literal["confirmed", "completed", "missed", "cancelled"] = Field(
+        description="Nuevo estado; las transiciones terminales no pueden revertirse."
+    )
 
 
 class ClinicalQuestionIn(BaseModel):
-    question: str = Field(min_length=2, max_length=500)
+    question: str = Field(
+        min_length=2,
+        max_length=500,
+        description="Pregunta sobre mediciones, alertas o citas almacenadas.",
+        examples=["¿Cuál fue la última medición clínica verificada?"],
+    )
 
 
 def _clinical_professional(
-    authorization: str | None = Header(default=None, alias="Authorization"),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_clinical_bearer),
 ) -> dict:
-    if not authorization or not authorization.lower().startswith("bearer "):
+    if not credentials or credentials.scheme.lower() != "bearer":
         raise HTTPException(status_code=401, detail="Usa Authorization: Bearer <token de Supabase>.")
-    token = authorization.split(" ", 1)[1].strip()
+    token = credentials.credentials.strip()
     try:
         return db.autenticar_profesional(token)
     except PermissionError as exc:
@@ -206,14 +346,13 @@ def _is_bsuid(value: str) -> bool:
     return bool(re.fullmatch(r"[A-Z]{2}(?:\.[A-Z]+)*\.\d+", str(value or "")))
 
 
-async def _send_whatsapp(recipient: str, text: str) -> bool:
+async def _send_whatsapp_payload(recipient: str, content: dict, preview_text: str) -> bool:
     recipient = _identity(recipient)
     # Los teléfonos se envían en ``to``; los BSUID se envían en ``recipient``.
     payload = {
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
-        "type": "text",
-        "text": {"body": text},
+        **content,
     }
     if recipient.isdigit():
         payload["to"] = f"+{recipient}"
@@ -225,7 +364,9 @@ async def _send_whatsapp(recipient: str, text: str) -> bool:
         print(f"[kapso] identidad de destino no soportada: {_ofuscar(recipient)}")
         return False
     if not config.usando_kapso():
-        preview = _recortar(text) if config.LOG_MESSAGE_CONTENT else "[contenido oculto]"
+        preview = (
+            _recortar(preview_text) if config.LOG_MESSAGE_CONTENT else "[contenido oculto]"
+        )
         print(f"[kapso-mock] {destination_kind}={_ofuscar(recipient)}: {preview}")
         return True
     url = (
@@ -274,10 +415,28 @@ async def _send_whatsapp(recipient: str, text: str) -> bool:
         return False
 
 
+async def _send_whatsapp(recipient: str, text: str) -> bool:
+    return await _send_whatsapp_payload(
+        recipient,
+        {"type": "text", "text": {"body": text}},
+        text,
+    )
+
+
+async def _send_whatsapp_interactive(
+    recipient: str, presentation: Presentation
+) -> bool:
+    return await _send_whatsapp_payload(
+        recipient,
+        interactive_payload(presentation),
+        presentation.body,
+    )
+
+
 async def _process(identity: str, text: str) -> None:
     async with _SEM:
         try:
-            answer = await asyncio.to_thread(yachay_agent.responder, text, identity)
+            answer = await asyncio.to_thread(nutricred_agent.responder, text, identity)
         except Exception as exc:
             print(f"[bot] error para {_ofuscar(identity)}: {exc!r}")
             answer = "No pude procesar el mensaje. Intenta nuevamente o escribe AYUDA."
@@ -288,7 +447,20 @@ async def _process(identity: str, text: str) -> None:
         if delay > 0:
             print(f"[bot] preparando respuesta para {_ofuscar(identity)} ({delay:.1f}s)")
             await asyncio.sleep(delay)
-        enviado = await _send_whatsapp(identity, answer)
+        presentation = build_presentation(identity, answer)
+        texto_enviado = False
+        if presentation and presentation.send_text_first:
+            texto_enviado = await _send_whatsapp(identity, answer)
+        if presentation:
+            enviado = await _send_whatsapp_interactive(identity, presentation)
+            # Si Kapso rechazara el interactivo, el flujo numérico continúa
+            # disponible mediante el mismo texto que ya utilizaba el bot.
+            if not enviado and not texto_enviado:
+                enviado = await _send_whatsapp(identity, answer)
+            elif not enviado:
+                enviado = texto_enviado
+        else:
+            enviado = await _send_whatsapp(identity, answer)
         estado = "enviado" if enviado else "FALLO el envio"
         preview = _recortar(answer) if config.LOG_MESSAGE_CONTENT else "[contenido oculto]"
         print(f"[bot] {_ofuscar(identity)} <- {estado}: {preview}")
@@ -358,9 +530,17 @@ def _extract_kapso(event: dict) -> tuple[str, str, str] | None:
         text = (message.get("text") or {}).get("body", "")
     elif message.get("type") == "interactive":
         interactive = message.get("interactive") or {}
+        button_reply = interactive.get("button_reply") or {}
+        list_reply = interactive.get("list_reply") or {}
+        # Los IDs son estables y están alineados con las opciones que acepta
+        # el flujo determinista. El título visible queda como compatibilidad.
         text = (
-            (interactive.get("button_reply") or {}).get("title")
-            or (interactive.get("list_reply") or {}).get("title")
+            button_reply.get("id")
+            or list_reply.get("id")
+            or kapso.get("reply_option_id")
+            or button_reply.get("title")
+            or list_reply.get("title")
+            or kapso.get("reply_option_title")
             or ""
         )
     elif message.get("type") == "audio":
@@ -373,13 +553,40 @@ def _extract_kapso(event: dict) -> tuple[str, str, str] | None:
     return identity, str(text).strip(), str(message.get("id") or "")
 
 
-@app.get("/health")
+@app.get(
+    "/",
+    tags=["Servicio"],
+    summary="Portada de la API",
+    description="Devuelve enlaces de descubrimiento; no expone secretos ni datos clínicos.",
+)
+def api_home() -> dict:
+    return {
+        "service": "nutricred",
+        "name": "NutriCRED",
+        "version": app.version,
+        "documentation": "/docs",
+        "redoc": "/redoc",
+        "openapi": "/openapi.json",
+        "health": "/health",
+    }
+
+
+@app.get(
+    "/health",
+    tags=["Servicio"],
+    summary="Comprobar disponibilidad",
+    description=(
+        "Informa si el proceso está activo y qué integraciones están habilitadas. "
+        "Un valor `memory` o `mock` es válido en desarrollo, no en producción."
+    ),
+    response_description="Estado operativo sin credenciales ni datos personales.",
+)
 def health() -> dict:
     return {
         "ok": True,
-        "service": "nutriacompana",
+        "service": "nutricred",
         "environment": config.APP_ENV,
-        "agent": yachay_agent.modo(),
+        "agent": nutricred_agent.modo(),
         "llm": "groq" if config.usando_groq() else "disabled",
         "database": "supabase" if db.usando_supabase() else "memory",
         "gateway": "kapso" if config.usando_kapso() else "mock",
@@ -388,12 +595,30 @@ def health() -> dict:
     }
 
 
-@app.post("/chat")
+@app.post(
+    "/chat",
+    tags=["Bot familiar"],
+    summary="Probar una conversación familiar",
+    description=(
+        "Ejecuta el mismo flujo determinista usado por WhatsApp. Está pensado para pruebas "
+        "locales y demostraciones; en producción los mensajes llegan por Kapso."
+    ),
+    responses={422: {"description": "Mensaje o identidad no válidos."}},
+)
 def chat(payload: ChatIn) -> dict:
-    return {"respuesta": yachay_agent.responder(payload.mensaje, _identity(payload.identidad))}
+    return {"respuesta": nutricred_agent.responder(payload.mensaje, _identity(payload.identidad))}
 
 
-@app.post("/assessments/preview")
+@app.post(
+    "/assessments/preview",
+    tags=["Antropometría"],
+    summary="Previsualizar evaluación antropométrica",
+    description=(
+        "Calcula indicadores OMS y semáforo sin guardar información. Los datos fuera de la "
+        "edad o plausibilidad admitida devuelven `422`."
+    ),
+    responses={422: {"description": "Medición no interpretable por el motor antropométrico."}},
+)
 def preview_assessment(payload: AssessmentIn) -> dict:
     try:
         result = assess_child(**payload.model_dump()).to_dict()
@@ -402,7 +627,16 @@ def preview_assessment(payload: AssessmentIn) -> dict:
     return {"assessment": result, "disclaimer": "Orientación; no constituye diagnóstico médico."}
 
 
-@app.get("/clinical/children/{child_id}/history")
+@app.get(
+    "/clinical/children/{child_id}/history",
+    tags=["Profesionales de salud"],
+    summary="Consultar historial integral",
+    description=(
+        "Devuelve por separado `reported_trajectory` (familia) y `verified_trajectory` "
+        "(personal de salud), además de alertas, seguimiento y citas. No mezcla las fuentes."
+    ),
+    responses=_CLINICAL_RESPONSES,
+)
 def clinical_history(
     child_id: str, professional: dict = Depends(_clinical_professional)
 ) -> dict:
@@ -417,7 +651,16 @@ def clinical_history(
     return {**(history or {}), "appointments": appointments}
 
 
-@app.post("/clinical/children/{child_id}/measurements")
+@app.post(
+    "/clinical/children/{child_id}/measurements",
+    tags=["Profesionales de salud"],
+    summary="Registrar medición clínica verificada",
+    description=(
+        "Registra una nueva medición con `source=health_worker`, conserva quién la creó y "
+        "ejecuta el motor OMS. No corrige ni sobrescribe mediciones familiares."
+    ),
+    responses=_CLINICAL_RESPONSES,
+)
 def create_clinical_measurement(
     child_id: str,
     payload: ClinicalMeasurementIn,
@@ -447,7 +690,13 @@ def create_clinical_measurement(
         raise _clinical_http_error(exc) from exc
 
 
-@app.get("/clinical/children/{child_id}/appointments")
+@app.get(
+    "/clinical/children/{child_id}/appointments",
+    tags=["Profesionales de salud"],
+    summary="Listar citas",
+    description="Lista las citas del niño ordenadas desde la más reciente.",
+    responses=_CLINICAL_RESPONSES,
+)
 def clinical_appointments(
     child_id: str, professional: dict = Depends(_clinical_professional)
 ) -> dict:
@@ -460,7 +709,16 @@ def clinical_appointments(
     return {"appointments": rows}
 
 
-@app.post("/clinical/children/{child_id}/appointments")
+@app.post(
+    "/clinical/children/{child_id}/appointments",
+    tags=["Profesionales de salud"],
+    summary="Programar cita",
+    description=(
+        "Crea una cita auditada en UTC. La fecha recibida debe incluir zona horaria para "
+        "evitar ambigüedad."
+    ),
+    responses=_CLINICAL_RESPONSES,
+)
 def create_clinical_appointment(
     child_id: str,
     payload: AppointmentIn,
@@ -479,7 +737,16 @@ def create_clinical_appointment(
     return {"appointment": row}
 
 
-@app.patch("/clinical/appointments/{appointment_id}")
+@app.patch(
+    "/clinical/appointments/{appointment_id}",
+    tags=["Profesionales de salud"],
+    summary="Actualizar estado de una cita",
+    description=(
+        "Permite transiciones desde `scheduled` o `confirmed` hacia un estado válido. "
+        "Los estados terminales no pueden revertirse."
+    ),
+    responses=_CLINICAL_RESPONSES,
+)
 def update_clinical_appointment(
     appointment_id: str,
     payload: AppointmentStatusIn,
@@ -496,7 +763,16 @@ def update_clinical_appointment(
     return {"appointment": row}
 
 
-@app.post("/clinical/children/{child_id}/ask")
+@app.post(
+    "/clinical/children/{child_id}/ask",
+    tags=["Profesionales de salud"],
+    summary="Preguntar sobre el historial",
+    description=(
+        "Responde preguntas sobre la última medición, mediciones familiares, alertas o citas. "
+        "La respuesta se construye de forma determinista y no delega decisiones al LLM."
+    ),
+    responses=_CLINICAL_RESPONSES,
+)
 def ask_clinical_history(
     child_id: str,
     payload: ClinicalQuestionIn,
@@ -513,15 +789,60 @@ def ask_clinical_history(
     return _clinical_history_answer(payload.question, history, appointments)
 
 
-@app.post("/webhooks/kapso")
+@app.post(
+    "/webhooks/kapso",
+    tags=["Kapso"],
+    summary="Recibir eventos de WhatsApp",
+    description=(
+        "Endpoint configurado en Kapso para `whatsapp.message.received`. Valida la firma "
+        "HMAC cuando `KAPSO_WEBHOOK_SECRET` está configurado, evita duplicados y responde "
+        "antes de procesar el mensaje en la cola."
+    ),
+    responses={
+        200: {"description": "Evento aceptado, ignorado o ya procesado."},
+        400: {"description": "El cuerpo no es JSON válido."},
+        401: {"description": "Firma del webhook inválida."},
+    },
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {"type": "object", "additionalProperties": True},
+                    "example": {
+                        "message": {
+                            "id": "wamid.demo",
+                            "from": "51999999999",
+                            "type": "text",
+                            "text": {"body": "Hola"},
+                            "kapso": {"direction": "inbound"},
+                        }
+                    },
+                }
+            },
+        }
+    },
+)
 @app.post("/webhook/whatsapp", include_in_schema=False)
-async def kapso_webhook(request: Request) -> dict:
+async def kapso_webhook(
+    request: Request,
+    x_webhook_event: str | None = Header(
+        default=None,
+        alias="X-Webhook-Event",
+        description="Tipo de evento; se procesa `whatsapp.message.received`.",
+    ),
+    x_webhook_signature: str | None = Header(
+        default=None,
+        alias="X-Webhook-Signature",
+        description="Firma HMAC SHA-256 proporcionada por Kapso.",
+    ),
+) -> dict:
     raw = await request.body()
     if not raw:
         return {"ok": True, "accepted": 0}
-    if not _valid_signature(raw, request.headers.get("x-webhook-signature", "")):
+    if not _valid_signature(raw, x_webhook_signature or ""):
         raise HTTPException(status_code=401, detail="Firma de webhook inválida")
-    event_type = request.headers.get("x-webhook-event", "")
+    event_type = x_webhook_event or ""
     if event_type and event_type != "whatsapp.message.received":
         return {"ok": True, "accepted": 0}
     try:
