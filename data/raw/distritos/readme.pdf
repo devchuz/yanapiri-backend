@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StyledLayerDescriptor version="1.0.0" xmlns="http://www.opengis.net/sld" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.0.0/StyledLayerDescriptor.xsd">
+  <NamedLayer>
+    <Name>peru_distrito</Name>
+    <UserStyle>
+      <FeatureTypeStyle>
+        <Rule>
+
+          <Name>Límite Distrital</Name>
+          <!--PolygonSymbolizer>
+            <Stroke>
+              <CssParameter name="stroke">#FFFFFF</CssParameter>
+              <CssParameter name="stroke-opacity">0.2</CssParameter>
+              <CssParameter name="stroke-width">1</CssParameter>
+            </Stroke>
+          </PolygonSymbolizer-->
+           <LineSymbolizer>
+        <Stroke>
+           <CssParameter name="stroke">#FFFFFF</CssParameter>
+           <CssParameter name="stroke-width">1</CssParameter>
+          <CssParameter name="stroke-opacity">0.2</CssParameter>
+           <CssParameter name="stroke-linecap">round</CssParameter>
+         </Stroke>
+       </LineSymbolizer>
+
+     
+          
+         
+        </Rule>
+
+
+        <Rule>
+
+          <MaxScaleDenominator>2600000</MaxScaleDenominator>
+          
+          <TextSymbolizer>
+            <Label><ogc:PropertyName>nom_dist</ogc:PropertyName></Label>
+            <Font>
+              <CssParameter name="font-family">Verdana</CssParameter>
+              <CssParameter name="font-weight">bold</CssParameter>
+              <CssParameter name="font-style">oblique</CssParameter>
+              <CssParameter name="font-size">8</CssParameter>
+
+            </Font>
+            <LabelPlacement>
+              <PointPlacement>
+                <AnchorPoint>
+                  <AnchorPointX>0.5</AnchorPointX>
+                  <AnchorPointY>0.5</AnchorPointY>
+                </AnchorPoint>
+              </PointPlacement>
+            </LabelPlacement>
+            <Halo>
+              <Radius>1</Radius>
+
+              <Fill>
+                <CssParameter name="fill">#000000</CssParameter>
+
+              </Fill>
+            </Halo>
+
+            <Fill>
+              <CssParameter name="fill">#FFFFFF</CssParameter>
+            </Fill>
+          </TextSymbolizer>
+
+        </Rule>
+
+
+      </FeatureTypeStyle>
+    </UserStyle>
+  </NamedLayer>
+</StyledLayerDescriptor>

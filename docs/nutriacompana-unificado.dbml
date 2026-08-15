@@ -1,0 +1,612 @@
+Project nutriacompana_unificado {
+  database_type: 'PostgreSQL'
+  Note: '''
+    Modelo unificado de NutriAcompaña / Yanapiri Wawa para discusión del equipo.
+    Combina el bot, monitoreo antropométrico, riesgo de anemia, planes alimentarios,
+    validación profesional y panel clínico.
+
+    IMPORTANTE: este archivo es de diseño. db/schema.sql seguirá siendo la migración
+    ejecutable oficial cuando el equipo apruebe el modelo.
+  '''
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+Enum member_role {
+  health_worker
+  coordinator
+  admin
+}
+
+Enum professional_role {
+  physician
+  nurse
+  nutritionist
+  social_actor
+  administrator
+}
+
+Enum child_sex {
+  M
+  F
+}
+
+Enum family_language {
+  es
+  qu
+  ay
+}
+
+Enum measurement_mode {
+  length
+  height
+}
+
+Enum measurement_source {
+  caregiver
+  health_worker
+  social_actor
+}
+
+Enum measurement_quality {
+  pending
+  valid
+  needs_confirmation
+  rejected
+}
+
+Enum traffic_light {
+  verde
+  amarillo
+  rojo
+}
+
+Enum ciaf_category {
+  sin_falla
+  solo_talla_baja
+  solo_desnutricion_aguda
+  solo_bajo_peso
+  talla_baja_y_bajo_peso
+  aguda_y_bajo_peso
+  las_tres
+}
+
+Enum anemia_risk {
+  no_evaluado
+  bajo
+  medio
+  alto
+  confirmado_por_hb
+}
+
+Enum trajectory_signal {
+  insuficiente
+  estable
+  aplanamiento
+  recuperacion
+}
+
+Enum alert_level {
+  amarillo
+  rojo
+}
+
+Enum alert_status {
+  abierta
+  vista
+  en_seguimiento
+  resuelta
+}
+
+Enum plan_status {
+  pendiente_validacion
+  validado
+  editado
+  derivado
+  rechazado
+  caducado
+  enviado
+}
+
+Enum plan_line_type {
+  alimento
+  preparacion
+  absorcion
+  seguimiento
+  derivacion
+}
+
+Enum validation_action {
+  validado
+  editado
+  derivado
+  rechazado
+}
+
+Enum conversation_role {
+  user
+  assistant
+  system
+}
+
+Enum message_direction {
+  inbound
+  outbound
+}
+
+Enum message_type {
+  text
+  audio
+  interactive
+  template
+  system
+}
+
+// ============================================================
+// ACCESO, PERSONAL Y ESTABLECIMIENTOS
+// ============================================================
+
+Table auth.users [headerColor: #2D6A4F, note: 'Tabla administrada por Supabase Auth.'] {
+  id uuid [pk, not null]
+  email text
+  created_at timestamptz
+}
+
+Table public.districts [headerColor: #2D6A4F, note: 'Catálogo territorial basado en INEI.'] {
+  ubigeo varchar(6) [pk, not null]
+  name text [not null]
+  province text [not null]
+  region text [not null]
+  altitude_masl integer
+  poverty_quintile integer [note: 'Valor de 1 a 5 cuando exista fuente oficial.']
+  active boolean [not null, default: true]
+  created_at timestamptz [not null, default: `now()`]
+}
+
+Table public.health_centers [headerColor: #2D6A4F, note: 'Catálogo de establecimientos RENIPRESS/RENAES.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  renaes_code text [unique]
+  name text [not null]
+  ubigeo varchar(6)
+  care_level text
+  latitude numeric(9,6)
+  longitude numeric(9,6)
+  active boolean [not null, default: true]
+  created_at timestamptz [not null, default: `now()`]
+}
+
+Table public.professional_profiles [headerColor: #2D6A4F, note: 'Información profesional adicional al usuario autenticado.'] {
+  user_id uuid [pk, not null]
+  full_name text [not null]
+  professional_role professional_role [not null]
+  license_number text
+  active boolean [not null, default: true]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.health_center_members [headerColor: #2D6A4F, note: 'Controla qué establecimiento puede consultar cada profesional mediante RLS.'] {
+  user_id uuid [not null]
+  health_center_id uuid [not null]
+  role member_role [not null, default: 'health_worker']
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_id, health_center_id) [pk]
+  }
+}
+
+// ============================================================
+// FAMILIAS E IDENTIDAD DE WHATSAPP
+// ============================================================
+
+Table public.caregivers [headerColor: #2F80ED, note: 'Cuidador que interactúa con el bot. El BSUID es preferido cuando Meta lo entrega.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  whatsapp_identity text [not null, unique, note: 'Identidad canónica: BSUID o teléfono normalizado.']
+  business_scoped_user_id text [unique, note: 'Ejemplo PE.1054...; permite responder sin conocer el teléfono.']
+  parent_business_scoped_user_id text
+  whatsapp_username text [note: 'Puede cambiar; no usar como llave primaria.']
+  phone_number text [note: 'E.164; puede ser NULL cuando Meta protege el número.']
+  full_name text [not null]
+  preferred_language family_language [not null, default: 'es']
+  ubigeo varchar(6)
+  consent_at timestamptz [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.children [headerColor: #2F80ED, note: 'Niñas y niños menores de cinco años. Contiene datos personales sensibles.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  caregiver_id uuid [not null]
+  health_center_id uuid [note: 'Puede quedar pendiente hasta que se resuelva el establecimiento.']
+  full_name text [not null]
+  birth_date date [not null]
+  sex child_sex [not null, note: 'Selecciona la tabla LMS OMS correspondiente.']
+  ubigeo varchar(6)
+  reported_health_center text
+  active boolean [not null, default: true]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    caregiver_id
+    health_center_id
+  }
+}
+
+// ============================================================
+// MEDICIONES, CALIDAD, CLASIFICACIÓN Y ALERTAS
+// ============================================================
+
+Table public.measurements [headerColor: #F2994A, note: 'Evento antropométrico. Primero pasa por control de calidad y plausibilidad.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  child_id uuid [not null]
+  measured_at timestamptz [not null]
+  weight_kg numeric(5,2) [not null]
+  height_cm numeric(5,2) [not null]
+  height_mode measurement_mode [not null]
+  muac_mm numeric(5,1)
+  muac_color text
+  bilateral_edema boolean [not null, default: false]
+  validation_status text [not null, default: 'valid', note: 'valid o needs_review.']
+  validation_notes text [note: 'Motivo de revisión cuando no existe evaluación.']
+  source measurement_source [not null, default: 'caregiver']
+  quality_status measurement_quality [not null, default: 'pending']
+  quality_reasons jsonb [not null, default: `'[]'::jsonb`]
+  confirmed_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (child_id, measured_at) [name: 'idx_measurements_child_date']
+  }
+}
+
+Table public.hemoglobin_measurements [headerColor: #F2994A, note: 'La hemoglobina no se mide por WhatsApp; la carga un establecimiento.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  child_id uuid [not null]
+  measured_at timestamptz [not null]
+  observed_hb_gdl numeric(4,2) [not null]
+  adjusted_hb_gdl numeric(4,2)
+  adjustment_method text [not null, note: 'oms_2024, cdc_1989 o sin_ajuste.']
+  altitude_masl integer
+  source measurement_source [not null, default: 'health_worker']
+  recorded_by uuid
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (child_id, measured_at)
+  }
+}
+
+Table public.assessment_results [headerColor: #F2994A, note: 'Salida determinista de antropometría, CIAF, anemia estimada y trayectoria.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  measurement_id uuid [not null, unique]
+  age_days integer [not null]
+  waz numeric(5,2) [note: 'Peso/edad.']
+  haz numeric(5,2) [note: 'Talla/edad.']
+  whz numeric(5,2) [note: 'Peso/longitud o peso/talla.']
+  muacz numeric(5,2) [note: 'Opcional cuando se incorpore la tabla PB/edad.']
+  wh_indicator text [not null]
+  adjusted_height_cm numeric(5,1) [not null]
+  ciaf_category ciaf_category [not null]
+  anemia_risk anemia_risk [not null, default: 'no_evaluado']
+  anemia_risk_basis text
+  trajectory_signal trajectory_signal [not null, default: 'insuficiente']
+  trajectory_controls integer [not null, default: 1]
+  haz_delta numeric(5,2)
+  semaforo traffic_light [not null]
+  reasons jsonb [not null, default: `'[]'::jsonb`]
+  warnings jsonb [not null, default: `'[]'::jsonb`]
+  rule_version text [not null]
+  calculated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.alerts [headerColor: #F2994A, note: 'Casos amarillo o rojo atendidos desde el panel clínico.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  child_id uuid [not null]
+  measurement_id uuid [not null]
+  health_center_id uuid
+  level alert_level [not null]
+  status alert_status [not null, default: 'abierta']
+  reason text [not null]
+  seen_by uuid
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  resolved_at timestamptz
+
+  indexes {
+    (health_center_id, status, level) [name: 'idx_alerts_center_status']
+  }
+}
+
+Table public.alert_followup_events [headerColor: #F2994A, note: 'Bitácora inmutable de acciones y barreras; un reporte familiar nunca equivale a validación clínica.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  alert_id uuid [not null]
+  actor_type text [not null]
+  event_type text [not null]
+  planned_for date
+  barrier_code text
+  notes text
+  occurred_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (alert_id, occurred_at) [name: 'idx_followup_alert_date']
+    planned_for [name: 'idx_followup_planned_for']
+  }
+}
+
+// ============================================================
+// ALIMENTOS, MATRIZ DE DECISIÓN Y PLANES
+// ============================================================
+
+Table public.foods [headerColor: #B7791F, note: 'Catálogo de las Tablas Peruanas de Composición de Alimentos.'] {
+  tpca_code text [pk, not null]
+  name text [not null]
+  food_group text
+  energy_kcal numeric(8,2)
+  protein_g numeric(8,2)
+  iron_mg numeric(8,2)
+  iron_type text [note: 'heminico o no_heminico.']
+  zinc_mg numeric(8,2)
+  vitamin_c_mg numeric(8,2)
+  vitamin_a_mcg numeric(8,2)
+  incomplete_data boolean [not null, default: false]
+  source_reference text
+  active boolean [not null, default: true]
+}
+
+Table public.food_availability [headerColor: #B7791F, note: 'Disponibilidad y costo relativo por territorio. No modifica la prioridad clínica.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  tpca_code text [not null]
+  ubigeo varchar(6) [not null]
+  available boolean [not null, default: true]
+  relative_cost integer
+  source_reference text
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (tpca_code, ubigeo) [unique]
+  }
+}
+
+Table public.decision_rules [headerColor: #B7791F, note: 'Matriz clínica determinista. Cada regla debe citar una fuente normativa.'] {
+  id text [pk, not null, note: 'Ejemplo R-FE-01.']
+  ciaf_category ciaf_category [not null]
+  anemia_risk anemia_risk [not null]
+  min_age_months integer [not null]
+  max_age_months integer [not null]
+  line_type plan_line_type [not null]
+  text_template text [not null]
+  target_nutrient text
+  followup_days integer
+  requires_referral boolean [not null, default: false]
+  normative_source text [not null]
+  annex_reference text
+  rule_version text [not null]
+  validated_by uuid
+  validated_at timestamptz
+  active boolean [not null, default: true]
+}
+
+Table public.rule_foods [headerColor: #B7791F, note: 'Alimentos permitidos para cada regla, ordenados por prioridad.'] {
+  rule_id text [not null]
+  tpca_code text [not null]
+  priority integer [not null, default: 1]
+
+  indexes {
+    (rule_id, tpca_code) [pk]
+  }
+}
+
+Table public.care_plans [headerColor: #B7791F, note: 'Plan estructurado producido por reglas; el LLM solo puede redactarlo.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  assessment_id uuid [not null]
+  status plan_status [not null, default: 'pendiente_validacion']
+  fallback_message text [not null]
+  rule_version text [not null]
+  generated_at timestamptz [not null, default: `now()`]
+  expires_at timestamptz
+  sent_at timestamptz
+}
+
+Table public.care_plan_lines [headerColor: #B7791F, note: 'Cada línea conserva la regla que la originó para auditoría clínica.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  plan_id uuid [not null]
+  position integer [not null]
+  line_type plan_line_type [not null]
+  original_text text [not null]
+  rule_id text [not null]
+  target_nutrient text
+  followup_days integer
+  normative_source text [not null]
+
+  indexes {
+    (plan_id, position) [unique]
+  }
+}
+
+Table public.plan_validations [headerColor: #B7791F, note: 'Compuerta humana antes de enviar un plan personalizado.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  plan_id uuid [not null]
+  professional_user_id uuid [not null]
+  action validation_action [not null]
+  clinical_note text
+  validated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.validation_line_edits [headerColor: #B7791F, note: 'Conserva texto original, final y motivo de cada edición.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  validation_id uuid [not null]
+  plan_line_id uuid [not null]
+  original_text text [not null]
+  final_text text [not null]
+  reason text
+}
+
+// ============================================================
+// CANAL WHATSAPP Y AUDITORÍA TÉCNICA
+// ============================================================
+
+Table public.conversation_messages [headerColor: #9B51E0, note: 'Bitácora del canal y vínculo opcional con niño o plan.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  whatsapp_identity text [not null]
+  caregiver_id uuid
+  child_id uuid
+  plan_id uuid
+  role conversation_role [not null]
+  direction message_direction [not null]
+  message_type message_type [not null, default: 'text']
+  content text [not null]
+  provider_message_id text [unique]
+  transcribed boolean [not null, default: false]
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (whatsapp_identity, created_at) [name: 'idx_messages_identity_date']
+  }
+}
+
+Table public.conversation_states [headerColor: #9B51E0, note: 'Paso de la máquina de estados por identidad canónica.'] {
+  whatsapp_identity text [pk, not null]
+  state jsonb [not null, default: `'{}'::jsonb`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.webhook_events [headerColor: #9B51E0, note: 'Evita procesar dos veces el mismo evento de Kapso.'] {
+  event_id text [pk, not null]
+  event_type text [not null]
+  phone_number_id text
+  payload jsonb [not null, default: `'{}'::jsonb`]
+  received_at timestamptz [not null, default: `now()`]
+}
+
+// ============================================================
+// VISTAS DE SOLO LECTURA PARA EL PANEL
+// Se muestran como tablas únicamente para discutirlas en dbdiagram.io.
+// ============================================================
+
+Table public.v_prioritized_cases [headerColor: #00A896, note: 'VIEW: lista clínica priorizada; no crear como tabla física.'] {
+  child_id uuid
+  child_name text
+  caregiver_name text
+  caregiver_phone text
+  health_center_id uuid
+  measurement_id uuid
+  measured_at timestamptz
+  waz numeric(5,2)
+  haz numeric(5,2)
+  whz numeric(5,2)
+  ciaf_category ciaf_category
+  anemia_risk anemia_risk
+  trajectory_signal trajectory_signal
+  semaforo traffic_light
+  alert_id uuid
+  alert_status alert_status
+  plan_id uuid
+  plan_status plan_status
+  priority_order integer
+}
+
+Table public.v_child_trajectory [headerColor: #00A896, note: 'VIEW: trayectoria longitudinal para gráficos del panel.'] {
+  child_id uuid
+  measurement_id uuid
+  measured_at timestamptz
+  weight_kg numeric(5,2)
+  height_cm numeric(5,2)
+  muac_mm numeric(5,1)
+  waz numeric(5,2)
+  haz numeric(5,2)
+  whz numeric(5,2)
+  semaforo traffic_light
+  rule_version text
+}
+
+// ============================================================
+// RELACIONES
+// ============================================================
+
+Ref district_health_center: public.health_centers.ubigeo > public.districts.ubigeo
+Ref professional_auth_user: public.professional_profiles.user_id - auth.users.id [delete: cascade]
+Ref member_auth_user: public.health_center_members.user_id > auth.users.id [delete: cascade]
+Ref member_health_center: public.health_center_members.health_center_id > public.health_centers.id [delete: cascade]
+
+Ref caregiver_district: public.caregivers.ubigeo > public.districts.ubigeo
+Ref child_caregiver: public.children.caregiver_id > public.caregivers.id [delete: cascade]
+Ref child_health_center: public.children.health_center_id > public.health_centers.id [delete: set null]
+Ref child_district: public.children.ubigeo > public.districts.ubigeo
+
+Ref measurement_child: public.measurements.child_id > public.children.id [delete: cascade]
+Ref hemoglobin_child: public.hemoglobin_measurements.child_id > public.children.id [delete: cascade]
+Ref hemoglobin_professional: public.hemoglobin_measurements.recorded_by > auth.users.id [delete: set null]
+Ref assessment_measurement: public.measurements.id - public.assessment_results.measurement_id [delete: cascade]
+Ref alert_child: public.alerts.child_id > public.children.id [delete: cascade]
+Ref alert_measurement: public.alerts.measurement_id > public.measurements.id [delete: cascade]
+Ref alert_health_center: public.alerts.health_center_id > public.health_centers.id [delete: set null]
+Ref alert_seen_by: public.alerts.seen_by > auth.users.id [delete: set null]
+Ref followup_alert: public.alert_followup_events.alert_id > public.alerts.id [delete: cascade]
+
+Ref food_availability_food: public.food_availability.tpca_code > public.foods.tpca_code [delete: cascade]
+Ref food_availability_district: public.food_availability.ubigeo > public.districts.ubigeo [delete: cascade]
+Ref rule_validated_by: public.decision_rules.validated_by > auth.users.id [delete: set null]
+Ref rule_food_rule: public.rule_foods.rule_id > public.decision_rules.id [delete: cascade]
+Ref rule_food_food: public.rule_foods.tpca_code > public.foods.tpca_code [delete: cascade]
+Ref plan_assessment: public.care_plans.assessment_id > public.assessment_results.id [delete: cascade]
+Ref plan_line_plan: public.care_plan_lines.plan_id > public.care_plans.id [delete: cascade]
+Ref plan_line_rule: public.care_plan_lines.rule_id > public.decision_rules.id
+Ref validation_plan: public.plan_validations.plan_id > public.care_plans.id [delete: cascade]
+Ref validation_professional: public.plan_validations.professional_user_id > auth.users.id
+Ref validation_edit_validation: public.validation_line_edits.validation_id > public.plan_validations.id [delete: cascade]
+Ref validation_edit_line: public.validation_line_edits.plan_line_id > public.care_plan_lines.id [delete: cascade]
+
+Ref message_caregiver: public.conversation_messages.caregiver_id > public.caregivers.id [delete: set null]
+Ref message_child: public.conversation_messages.child_id > public.children.id [delete: set null]
+Ref message_plan: public.conversation_messages.plan_id > public.care_plans.id [delete: set null]
+
+// ============================================================
+// AGRUPACIONES VISUALES
+// ============================================================
+
+TableGroup "Acceso y establecimientos" {
+  auth.users
+  public.districts
+  public.health_centers
+  public.professional_profiles
+  public.health_center_members
+}
+
+TableGroup "Familias" {
+  public.caregivers
+  public.children
+}
+
+TableGroup "Crecimiento y riesgo" {
+  public.measurements
+  public.hemoglobin_measurements
+  public.assessment_results
+  public.alerts
+  public.alert_followup_events
+}
+
+TableGroup "Recomendaciones y validación" {
+  public.foods
+  public.food_availability
+  public.decision_rules
+  public.rule_foods
+  public.care_plans
+  public.care_plan_lines
+  public.plan_validations
+  public.validation_line_edits
+}
+
+TableGroup "Canal WhatsApp" {
+  public.conversation_messages
+  public.conversation_states
+  public.webhook_events
+}
+
+TableGroup "Vistas del panel clínico" {
+  public.v_prioritized_cases
+  public.v_child_trajectory
+}

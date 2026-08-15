@@ -1,0 +1,441 @@
+Project nutriacompana {
+  database_type: 'PostgreSQL'
+  Note: '''
+    Modelo colaborativo de NutriAcompaña / Yanapiri Wawa.
+    La migración ejecutable oficial sigue siendo db/schema.sql.
+    Los enums de este diagrama representan restricciones CHECK del SQL real.
+  '''
+}
+
+Enum member_role {
+  health_worker
+  coordinator
+  admin
+}
+
+Enum child_sex {
+  M
+  F
+}
+
+Enum measurement_mode {
+  length
+  height
+}
+
+Enum measurement_source {
+  caregiver
+  health_worker
+  social_actor
+}
+
+Enum traffic_light {
+  verde
+  amarillo
+  rojo
+}
+
+Enum alert_level {
+  amarillo
+  rojo
+}
+
+Enum alert_status {
+  abierta
+  vista
+  en_seguimiento
+  resuelta
+}
+
+Enum conversation_role {
+  user
+  assistant
+  system
+}
+
+Enum verification_status {
+  reported
+  verified
+  rejected
+}
+
+Enum supplement_type {
+  iron
+  mnp
+  vitamin_a
+  zinc
+  vitamin_d
+  other
+}
+
+// Tabla externa administrada por Supabase Auth.
+Table auth.users [headerColor: #2D6A4F, note: 'Usuarios autenticados; Supabase administra esta tabla.'] {
+  id uuid [pk, not null]
+  email text
+  created_at timestamptz
+}
+
+Table public.health_centers [headerColor: #2D6A4F, note: 'Establecimientos de salud disponibles para asignación y seguimiento.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  renaes_code text [unique, note: 'Código oficial RENIPRESS/RENAES cuando esté disponible.']
+  name text [not null]
+  district text [not null]
+  province text
+  region text
+  active boolean [not null, default: true]
+  created_at timestamptz [not null, default: `now()`]
+}
+
+Table public.health_center_members [headerColor: #2D6A4F, note: 'Relaciona profesionales autenticados con uno o más establecimientos.'] {
+  user_id uuid [not null]
+  health_center_id uuid [not null]
+  role member_role [not null, default: 'health_worker']
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_id, health_center_id) [pk]
+  }
+}
+
+Table public.professional_profiles [headerColor: #2D6A4F, note: 'Identidad profesional; la app clínica la vincula con Supabase Auth.'] {
+  user_id uuid [pk, not null]
+  full_name text [not null]
+  profession text [not null]
+  license_number text
+  verified boolean [not null, default: false]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.caregivers [headerColor: #2F80ED, note: 'Madre, padre o cuidador que conversa con el bot.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  whatsapp_identity text [not null, unique, note: 'BSUID de Meta o teléfono normalizado. Es la identidad canónica del canal.']
+  phone_number text [note: 'Puede ser NULL cuando Meta solo entrega username/BSUID.']
+  full_name text [not null, note: 'Dato personal.']
+  district text [not null]
+  consent_at timestamptz [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.children [headerColor: #2F80ED, note: 'Niñas y niños menores de cinco años registrados por una familia.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  caregiver_id uuid [not null]
+  health_center_id uuid [note: 'Puede quedar pendiente hasta que un administrador lo asigne.']
+  full_name text [not null, note: 'Dato personal sensible por corresponder a un menor.']
+  birth_date date [not null]
+  sex child_sex [not null, note: 'Requerido para seleccionar las tablas OMS.']
+  district text [not null]
+  reported_health_center text [note: 'Nombre comunicado por la familia antes de resolver el establecimiento oficial.']
+  active boolean [not null, default: true]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    health_center_id [name: 'idx_children_health_center']
+  }
+}
+
+Table public.measurements [headerColor: #F2994A, note: 'Mediciones antropométricas reportadas por familia o personal autorizado.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  child_id uuid [not null]
+  measured_at timestamptz [not null]
+  weight_kg numeric(5,2) [not null, note: 'Captura flexible: 0.1 a 100 kg; el motor OMS decide si es interpretable.']
+  height_cm numeric(5,2) [not null, note: 'Captura flexible: 10 a 250 cm; el motor OMS decide si es interpretable.']
+  height_mode measurement_mode [not null]
+  muac_mm numeric(5,1) [note: 'Perímetro braquial; captura flexible: 10 a 1000 mm.']
+  bilateral_edema boolean [not null, default: false]
+  source measurement_source [not null, default: 'caregiver']
+  validation_status text [not null, default: 'valid', note: 'valid o needs_review.']
+  validation_notes text [note: 'Motivo por el que no se generó una evaluación.']
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (child_id, measured_at) [name: 'idx_measurements_child_date']
+  }
+}
+
+Table public.assessment_results [headerColor: #F2994A, note: 'Resultado determinista OMS generado para una medición.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  measurement_id uuid [not null, unique]
+  age_days integer [not null, note: 'Rango: 0 a 1856 días.']
+  waz numeric(5,2) [note: 'Z-score peso/edad.']
+  haz numeric(5,2) [note: 'Z-score talla/edad.']
+  whz numeric(5,2) [note: 'Z-score peso/longitud o peso/talla.']
+  wh_indicator text [not null, note: 'peso/longitud o peso/talla.']
+  adjusted_height_cm numeric(5,1) [not null]
+  semaforo traffic_light [not null]
+  reasons jsonb [not null, default: `'[]'::jsonb`]
+  warnings jsonb [not null, default: `'[]'::jsonb`]
+  rule_version text [not null]
+  created_at timestamptz [not null, default: `now()`]
+}
+
+Table public.alerts [headerColor: #F2994A, note: 'Seguimiento de resultados amarillos o rojos por el establecimiento asignado.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  child_id uuid [not null]
+  measurement_id uuid [not null]
+  health_center_id uuid [note: 'Puede ser NULL mientras el caso no esté asignado.']
+  nivel alert_level [not null]
+  estado alert_status [not null, default: 'abierta']
+  reason text [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  resolved_at timestamptz
+
+  indexes {
+    (health_center_id, estado, nivel) [name: 'idx_alerts_center_status']
+  }
+}
+
+Table public.alert_followup_events [headerColor: #F2994A, note: 'Bitácora de acciones declaradas por familia, personal o sistema; no resuelve la alerta.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  alert_id uuid [not null]
+  actor_type text [not null, note: 'caregiver, health_worker o system.']
+  event_type text [not null, note: 'Ej.: plans_to_attend, attendance_reported o needs_support.']
+  planned_for date
+  barrier_code text
+  notes text
+  occurred_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (alert_id, occurred_at) [name: 'idx_followup_alert_date']
+    planned_for [name: 'idx_followup_planned_for']
+  }
+}
+
+Table public.child_conditions [headerColor: #C0392B, note: 'Condición reportada o verificada. Un reporte familiar no equivale a diagnóstico clínico.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  child_id uuid [not null]
+  condition_code text [note: 'CIE-10 u otro catálogo cuando el origen clínico lo entregue.']
+  condition_name text [not null]
+  diagnosed_at date
+  diagnosing_professional_id uuid
+  diagnosed_by_name text [note: 'Texto informado por la familia hasta conciliar la identidad profesional.']
+  health_center_id uuid
+  reported_health_center text
+  verification_status verification_status [not null, default: 'reported']
+  condition_status text [not null, default: 'active']
+  source_system text [not null, default: 'caregiver']
+  external_record_id text
+  reported_by_identity text
+  verified_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (child_id, condition_status) [name: 'idx_conditions_child_status']
+  }
+}
+
+Table public.supplement_plans [headerColor: #C0392B, note: 'Indicación de suplemento reportada o verificada; el bot no calcula frecuencia ni dosis.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  child_id uuid [not null]
+  condition_id uuid
+  supplement_type supplement_type [not null]
+  purpose text [not null, default: 'unknown']
+  start_date date [not null]
+  end_date date
+  schedule_text text
+  indicating_professional_id uuid
+  indicated_by_name text
+  health_center_id uuid
+  reported_health_center text
+  verification_status verification_status [not null, default: 'reported']
+  status text [not null, default: 'active']
+  source_system text [not null, default: 'caregiver']
+  external_record_id text
+  verified_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.supplement_intake_events [headerColor: #C0392B, note: 'Autorreporte diario de adherencia. No demuestra ingestión ni sustituye la revisión clínica.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  plan_id uuid [not null]
+  scheduled_for date [not null]
+  intake_status text [not null, note: 'taken, not_taken o pending.']
+  reason_code text
+  notes text
+  reported_by_identity text
+  reported_at timestamptz [not null, default: `now()`]
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (plan_id, scheduled_for) [unique]
+  }
+}
+
+Table public.supplement_reminder_preferences [headerColor: #C0392B, note: 'Consentimiento y horario; el envío debe respetar las plantillas de WhatsApp.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  plan_id uuid [not null, unique]
+  whatsapp_identity text [not null]
+  enabled boolean [not null, default: true]
+  reminder_time time [not null, default: '08:00']
+  timezone text [not null, default: 'America/Lima']
+  consented_at timestamptz
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.conversation_messages [headerColor: #9B51E0, note: 'Historial mínimo para continuidad y auditoría del bot.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  whatsapp_identity text [not null]
+  role conversation_role [not null]
+  content text [not null]
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (whatsapp_identity, created_at) [name: 'idx_messages_identity_date']
+  }
+}
+
+Table public.conversation_states [headerColor: #9B51E0, note: 'Estado actual del flujo guiado por cada identidad de WhatsApp.'] {
+  whatsapp_identity text [pk, not null]
+  state jsonb [not null, default: `'{}'::jsonb`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.webhook_events [headerColor: #9B51E0, note: 'Idempotencia y auditoría técnica de eventos recibidos desde Kapso.'] {
+  event_id text [pk, not null]
+  event_type text [not null]
+  payload jsonb [not null, default: `'{}'::jsonb`]
+  received_at timestamptz [not null, default: `now()`]
+}
+
+Table public.district_recommendations [headerColor: #6B7280, note: 'Recomendaciones curadas por distrito y rango de edad.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  district text [not null]
+  min_age_months integer [not null, default: 0]
+  max_age_months integer [not null, default: 59]
+  category text [not null]
+  content text [not null]
+  source_url text
+  active boolean [not null, default: true]
+  created_at timestamptz [not null, default: `now()`]
+}
+
+// Se representan como tablas solo para discutir visualmente sus columnas.
+// En PostgreSQL son vistas de solo lectura creadas por db/schema.sql.
+Table public.v_casos_priorizados [headerColor: #00A896, note: 'VIEW: lista clínica priorizada. No crear como tabla.'] {
+  child_id uuid
+  child_name text
+  caregiver_name text
+  caregiver_phone text
+  health_center_id uuid
+  measurement_id uuid
+  measured_at timestamptz
+  waz numeric(5,2)
+  haz numeric(5,2)
+  whz numeric(5,2)
+  semaforo traffic_light
+  alert_id uuid
+  alert_status alert_status
+  last_followup_event text
+  followup_planned_for date
+  followup_barrier text
+  last_followup_at timestamptz
+  priority_order integer
+}
+
+Table public.v_app_children_compat [headerColor: #00A896, note: 'VIEW TEMPORAL: compatibilidad con el frontend actual. No crear como tabla.'] {
+  id uuid
+  fecha_nacimiento date
+  name text
+  sex child_sex
+  caregiver text
+  status_alerta text
+  weight numeric(5,2)
+  height numeric(5,2)
+  muac numeric(5,1)
+  last_measured timestamptz
+  validation_status text
+  validation_notes text
+  zscore_actual numeric(5,2)
+  district text
+  community text
+}
+
+Table public.v_supplement_followup [headerColor: #00A896, note: 'VIEW: seguimiento clínico de planes activos y autorreportes de los últimos 7 días.'] {
+  plan_id uuid
+  child_id uuid
+  child_name text
+  health_center_id uuid
+  caregiver_name text
+  caregiver_phone text
+  supplement_type supplement_type
+  purpose text
+  verification_status verification_status
+  plan_status text
+  indicated_by_name text
+  indicating_professional_id uuid
+  start_date date
+  last_intake_date date
+  last_intake_status text
+  last_reason_code text
+  taken_7d integer
+  not_taken_7d integer
+  pending_7d integer
+}
+
+Ref health_member_user: public.health_center_members.user_id > auth.users.id [delete: cascade]
+Ref health_member_center: public.health_center_members.health_center_id > public.health_centers.id [delete: cascade]
+Ref professional_auth_user: public.professional_profiles.user_id - auth.users.id [delete: cascade]
+Ref child_caregiver: public.children.caregiver_id > public.caregivers.id [delete: cascade]
+Ref child_center: public.children.health_center_id > public.health_centers.id [delete: set null]
+Ref measurement_child: public.measurements.child_id > public.children.id [delete: cascade]
+Ref assessment_measurement: public.measurements.id - public.assessment_results.measurement_id [delete: cascade]
+Ref alert_child: public.alerts.child_id > public.children.id [delete: cascade]
+Ref alert_measurement: public.alerts.measurement_id > public.measurements.id [delete: cascade]
+Ref alert_center: public.alerts.health_center_id > public.health_centers.id [delete: set null]
+Ref followup_alert: public.alert_followup_events.alert_id > public.alerts.id [delete: cascade]
+Ref condition_child: public.child_conditions.child_id > public.children.id [delete: cascade]
+Ref condition_professional: public.child_conditions.diagnosing_professional_id > auth.users.id [delete: set null]
+Ref condition_center: public.child_conditions.health_center_id > public.health_centers.id [delete: set null]
+Ref supplement_child: public.supplement_plans.child_id > public.children.id [delete: cascade]
+Ref supplement_condition: public.supplement_plans.condition_id > public.child_conditions.id [delete: set null]
+Ref supplement_professional: public.supplement_plans.indicating_professional_id > auth.users.id [delete: set null]
+Ref supplement_center: public.supplement_plans.health_center_id > public.health_centers.id [delete: set null]
+Ref intake_plan: public.supplement_intake_events.plan_id > public.supplement_plans.id [delete: cascade]
+Ref reminder_plan: public.supplement_reminder_preferences.plan_id - public.supplement_plans.id [delete: cascade]
+
+TableGroup "Acceso y establecimientos" {
+  auth.users
+  public.health_centers
+  public.health_center_members
+  public.professional_profiles
+}
+
+TableGroup "Familias" {
+  public.caregivers
+  public.children
+}
+
+TableGroup "Crecimiento y alertas" {
+  public.measurements
+  public.assessment_results
+  public.alerts
+  public.alert_followup_events
+}
+
+TableGroup "Condiciones y suplementación" {
+  public.child_conditions
+  public.supplement_plans
+  public.supplement_intake_events
+  public.supplement_reminder_preferences
+}
+
+TableGroup "Canal WhatsApp" {
+  public.conversation_messages
+  public.conversation_states
+  public.webhook_events
+}
+
+TableGroup "Orientación territorial" {
+  public.district_recommendations
+}
+
+TableGroup "Vistas para la app clínica" {
+  public.v_casos_priorizados
+  public.v_app_children_compat
+  public.v_supplement_followup
+}

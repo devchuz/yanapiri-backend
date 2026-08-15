@@ -1,0 +1,15 @@
+.env
+.env.development
+.env.production
+!.env.example
+!.env.development.example
+!.env.production.example
+.venv/
+venv
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store

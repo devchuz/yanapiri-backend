@@ -1,0 +1,49 @@
+name: Deploy to Hugging Face Spaces
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: PRD
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Hugging Face Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config user.email "jhonrinconroman@gmail.com"
+          git config user.name "Devchuz"
+
+          # Generar README para HF Spaces (sobreescribe solo en el runner)
+          cat > README.md << 'EOF'
+          ---
+          title: Yachay API
+          emoji: 🌱
+          colorFrom: green
+          colorTo: blue
+          sdk: docker
+          pinned: false
+          ---
+
+          # Yachay UNCP — Backend API
+
+          Asistente conversacional de Proyección Social por WhatsApp para la
+          Universidad Nacional del Centro del Perú (UNCP).
+
+          Desarrollado por [devchuz](https://github.com/devchuz) · jhonrinconroman@gmail.com
+          EOF
+
+          git add README.md
+          git commit -m "chore: HF Spaces README [skip ci]" --allow-empty
+
+          git remote add hf https://oauth2:$HF_TOKEN@huggingface.co/spaces/Devchuz/yachay-api || \
+          git remote set-url hf https://oauth2:$HF_TOKEN@huggingface.co/spaces/Devchuz/yachay-api
+
+          git push hf main --force
