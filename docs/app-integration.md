@@ -54,6 +54,31 @@ const { data } = await supabase
   .order('measured_at', { ascending: false })
 ```
 
+No mezclar las fuentes al graficar:
+
+- `verification_status = reported`: línea familiar preliminar;
+- `verification_status = verified`: referencia clínica;
+- `validation_status = needs_review`: dato conservado sin interpretación OMS.
+
+La API de este repositorio expone el contrato recomendado para escrituras
+clínicas. Enviar el access token de la sesión Supabase:
+
+```http
+Authorization: Bearer <supabase_access_token>
+```
+
+```text
+GET    /clinical/children/{id}/history
+POST   /clinical/children/{id}/measurements
+GET    /clinical/children/{id}/appointments
+POST   /clinical/children/{id}/appointments
+PATCH  /clinical/appointments/{appointment_id}
+POST   /clinical/children/{id}/ask
+```
+
+`/ask` consulta únicamente el historial autorizado y devuelve un resumen
+determinista. No calcula diagnósticos ni sustituye la revisión profesional.
+
 7. Para las alertas, leer `alerts` y actualizar solo `estado` en orden:
    `abierta → vista → en_seguimiento → resuelta`.
 

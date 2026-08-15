@@ -151,7 +151,10 @@ def _clinical_history_answer(question: str, history: dict, appointments: list[di
             else "No hay mediciones familiares registradas."
         )
         scope = "reported_measurements"
-    elif any(word in normalized for word in ("verificada", "clinica", "personal", "ultima")):
+    elif any(
+        word in normalized
+        for word in ("verificada", "clinica", "clínica", "personal", "ultima", "última")
+    ):
         latest = verified[0] if verified else None
         answer = (
             f"La última medición clínica verificada es del {latest['measured_at']}: "

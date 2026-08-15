@@ -26,7 +26,16 @@ Enum measurement_mode {
 Enum measurement_source {
   caregiver
   health_worker
-  social_actor
+}
+
+Enum measurement_verification {
+  reported
+  verified
+}
+
+Enum alert_kind {
+  verification_request
+  clinical_alert
 }
 
 Enum traffic_light {
@@ -136,7 +145,7 @@ Table public.children [headerColor: #2F80ED, note: 'Niñas y niños menores de c
   }
 }
 
-Table public.measurements [headerColor: #F2994A, note: 'Mediciones antropométricas reportadas por familia o personal autorizado.'] {
+Table public.measurements [headerColor: #F2994A, note: 'Dos trayectorias: familiar preliminar y clínica verificada; nunca se promedian ni sobrescriben.'] {
   id uuid [pk, not null, default: `gen_random_uuid()`]
   child_id uuid [not null]
   measured_at timestamptz [not null]
@@ -146,6 +155,9 @@ Table public.measurements [headerColor: #F2994A, note: 'Mediciones antropométri
   muac_mm numeric(5,1) [note: 'Perímetro braquial; captura flexible: 10 a 1000 mm.']
   bilateral_edema boolean [not null, default: false]
   source measurement_source [not null, default: 'caregiver']
+  verification_status measurement_verification [not null, default: 'reported']
+  recorded_by uuid [note: 'Usuario profesional; NULL para registros familiares.']
+  verified_at timestamptz
   validation_status text [not null, default: 'valid', note: 'valid o needs_review.']
   validation_notes text [note: 'Motivo por el que no se generó una evaluación.']
   created_at timestamptz [not null, default: `now()`]
@@ -177,6 +189,7 @@ Table public.alerts [headerColor: #F2994A, note: 'Seguimiento de resultados amar
   measurement_id uuid [not null]
   health_center_id uuid [note: 'Puede ser NULL mientras el caso no esté asignado.']
   nivel alert_level [not null]
+  alert_type alert_kind [not null, default: 'verification_request']
   estado alert_status [not null, default: 'abierta']
   reason text [not null]
   created_at timestamptz [not null, default: `now()`]
@@ -185,6 +198,23 @@ Table public.alerts [headerColor: #F2994A, note: 'Seguimiento de resultados amar
 
   indexes {
     (health_center_id, estado, nivel) [name: 'idx_alerts_center_status']
+  }
+}
+
+Table public.appointments [headerColor: #9B51E0, note: 'Citas registradas por personal autenticado para seguimiento del niño.'] {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  child_id uuid [not null]
+  health_center_id uuid
+  scheduled_at timestamptz [not null]
+  appointment_type text [not null, default: 'growth_control']
+  status text [not null, default: 'scheduled']
+  notes text
+  created_by uuid [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (child_id, scheduled_at) [name: 'idx_appointments_child_date']
   }
 }
 
@@ -383,11 +413,15 @@ Ref professional_auth_user: public.professional_profiles.user_id - auth.users.id
 Ref child_caregiver: public.children.caregiver_id > public.caregivers.id [delete: cascade]
 Ref child_center: public.children.health_center_id > public.health_centers.id [delete: set null]
 Ref measurement_child: public.measurements.child_id > public.children.id [delete: cascade]
+Ref measurement_professional: public.measurements.recorded_by > auth.users.id [delete: set null]
 Ref assessment_measurement: public.measurements.id - public.assessment_results.measurement_id [delete: cascade]
 Ref alert_child: public.alerts.child_id > public.children.id [delete: cascade]
 Ref alert_measurement: public.alerts.measurement_id > public.measurements.id [delete: cascade]
 Ref alert_center: public.alerts.health_center_id > public.health_centers.id [delete: set null]
 Ref followup_alert: public.alert_followup_events.alert_id > public.alerts.id [delete: cascade]
+Ref appointment_child: public.appointments.child_id > public.children.id [delete: cascade]
+Ref appointment_center: public.appointments.health_center_id > public.health_centers.id [delete: set null]
+Ref appointment_professional: public.appointments.created_by > auth.users.id [delete: restrict]
 Ref condition_child: public.child_conditions.child_id > public.children.id [delete: cascade]
 Ref condition_professional: public.child_conditions.diagnosing_professional_id > auth.users.id [delete: set null]
 Ref condition_center: public.child_conditions.health_center_id > public.health_centers.id [delete: set null]
@@ -415,6 +449,7 @@ TableGroup "Crecimiento y alertas" {
   public.assessment_results
   public.alerts
   public.alert_followup_events
+  public.appointments
 }
 
 TableGroup "Condiciones y suplementación" {

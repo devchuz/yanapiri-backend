@@ -1,49 +1,61 @@
-name: Deploy to Hugging Face Spaces
+name: Deploy API to Northflank
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+
+  PROJECT_ID: yanapiri
+  SERVICE_ID: yanapiri-api
+
+  # Este NO debe ser inventado.
+  # Debe ser el ID real de las credenciales GHCR creadas en Northflank.
+  CREDENTIALS_ID: TU_CREDENTIAL_ID
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    environment: PRD
+
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          fetch-depth: 0
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push to Hugging Face Spaces
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      - name: Generate image name
+        id: image
         run: |
-          git config user.email "jhonrinconroman@gmail.com"
-          git config user.name "Devchuz"
+          echo "name=ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
-          # Generar README para HF Spaces (sobreescribe solo en el runner)
-          cat > README.md << 'EOF'
-          ---
-          title: Yachay API
-          emoji: 🌱
-          colorFrom: green
-          colorTo: blue
-          sdk: docker
-          pinned: false
-          ---
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.image.outputs.name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-          # Yachay UNCP — Backend API
-
-          Asistente conversacional de Proyección Social por WhatsApp para la
-          Universidad Nacional del Centro del Perú (UNCP).
-
-          Desarrollado por [devchuz](https://github.com/devchuz) · jhonrinconroman@gmail.com
-          EOF
-
-          git add README.md
-          git commit -m "chore: HF Spaces README [skip ci]" --allow-empty
-
-          git remote add hf https://oauth2:$HF_TOKEN@huggingface.co/spaces/Devchuz/yachay-api || \
-          git remote set-url hf https://oauth2:$HF_TOKEN@huggingface.co/spaces/Devchuz/yachay-api
-
-          git push hf main --force
+      - name: Deploy to Northflank
+        uses: northflank/deploy-to-northflank@v1
+        with:
+          northflank-api-key: ${{ secrets.NORTHFLANK_API_KEY }}
+          project-id: ${{ env.PROJECT_ID }}
+          service-id: ${{ env.SERVICE_ID }}
+          image-path: ${{ steps.image.outputs.name }}
+          credentials-id: ${{ env.CREDENTIALS_ID }}

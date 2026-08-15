@@ -221,6 +221,77 @@ def test_measurement_accepts_and_normalizes_common_units():
     assert state["latest"]["muac_mm"] == 128.0
 
 
+def test_measurement_bundle_is_extracted_and_confirmed_in_one_message():
+    identity = "measurement-bundle-family"
+    db.registrar_nino(
+        whatsapp_identity=identity,
+        caregiver_name="Rosa",
+        child_name="Mateo",
+        birth_date=(date.today() - timedelta(days=365)).isoformat(),
+        sex="M",
+        district="Lima",
+    )
+
+    confirmation = respond(
+        "Registrar medición: peso 10.4 kg, talla 82 cm, acostado, MUAC 128 mm, edema no",
+        identity,
+    )
+    assert "Revisa los datos" in confirmation
+    assert "10.4 kg" in confirmation
+    assert "82.0 cm" in confirmation
+    assert "reportada por la persona cuidadora" in confirmation
+
+    result = respond("sí", identity)
+    assert "orientación preliminar" in result
+    child = db.listar_ninos(identity)[0]
+    state = db.consultar_estado(child["id"], identity)
+    assert state["latest_reported"]["weight_kg"] == 10.4
+    assert state["latest_reported"]["verification_status"] == "reported"
+    assert state["latest_verified"] is None
+
+
+def test_caregiver_and_clinical_measurements_remain_separate():
+    identity = "two-source-family"
+    child = db.registrar_nino(
+        whatsapp_identity=identity,
+        caregiver_name="Rosa",
+        child_name="Mateo",
+        birth_date=(date.today() - timedelta(days=365)).isoformat(),
+        sex="M",
+        district="Lima",
+    )
+    reported = db.registrar_medicion(
+        whatsapp_identity=identity,
+        child_id=child["id"],
+        measured_at=date.today().isoformat(),
+        weight_kg=8.9,
+        height_cm=74,
+        height_mode="length",
+        muac_mm=120,
+        bilateral_edema=False,
+    )
+    verified = db.registrar_medicion(
+        child_id=child["id"],
+        measured_at=date.today().isoformat(),
+        weight_kg=9.1,
+        height_cm=75,
+        height_mode="length",
+        muac_mm=121,
+        bilateral_edema=False,
+        source="health_worker",
+        recorded_by_user_id="11111111-1111-1111-1111-111111111111",
+    )
+
+    assert reported["measurement"]["verification_status"] == "reported"
+    assert reported["alert"]["alert_type"] == "verification_request"
+    assert verified["measurement"]["verification_status"] == "verified"
+    assert verified["alert"]["alert_type"] == "clinical_alert"
+    state = db.consultar_estado(child["id"], identity)
+    assert len(state["reported_trajectory"]) == 1
+    assert len(state["verified_trajectory"]) == 1
+    assert state["latest_reported"]["id"] != state["latest_verified"]["id"]
+
+
 def test_outside_oms_input_range_is_preserved_as_pending_review():
     identity = "broad-capture-family"
     db.registrar_nino(

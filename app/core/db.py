@@ -65,13 +65,20 @@ def _date_text(value: date | datetime | str) -> str:
 
 
 def _alert_priority_key(alert: dict) -> tuple[int, float]:
-    """Rojo antes que amarillo y, dentro del nivel, la alerta más reciente."""
+    """Prioriza nivel y distingue alerta clínica de solicitud de verificación."""
     try:
         created = datetime.fromisoformat(str(alert.get("created_at") or "").replace("Z", "+00:00"))
         timestamp = created.timestamp()
     except ValueError:
         timestamp = 0
-    return (0 if alert.get("nivel") == "rojo" else 1, -timestamp)
+    clinical = alert.get("alert_type") == "clinical_alert"
+    priority = (
+        0 if alert.get("nivel") == "rojo" and clinical
+        else 1 if alert.get("nivel") == "rojo"
+        else 2 if clinical
+        else 3
+    )
+    return (priority, -timestamp)
 
 
 def _response_data(response, default=None):
@@ -395,7 +402,7 @@ def _resolve_health_center(reported: str, district: str) -> dict | None:
 
 def registrar_nino(
     *,
-    whatsapp_identity: str | None = None,
+    whatsapp_identity: str,
     caregiver_name: str,
     child_name: str,
     birth_date: str,
@@ -938,7 +945,7 @@ def recordatorios_suplemento_pendientes(
 
 def registrar_medicion(
     *,
-    whatsapp_identity: str,
+    whatsapp_identity: str | None = None,
     child_id: str,
     measured_at: str,
     weight_kg: float,
@@ -1121,7 +1128,11 @@ def registrar_medicion_para_revision(
         try:
             client.table("measurements").insert(measurement).execute()
         except Exception as exc:
-            if _missing_measurement_review_columns(exc) or _legacy_measurement_range_constraints(exc):
+            if (
+                _missing_measurement_review_columns(exc)
+                or _missing_measurement_provenance_columns(exc)
+                or _legacy_measurement_range_constraints(exc)
+            ):
                 raise MeasurementReviewStorageUnavailableError(
                     "Falta aplicar las migraciones de mediciones en Supabase."
                 ) from exc
@@ -1230,6 +1241,13 @@ def consultar_estado(child_ref: str, whatsapp_identity: str | None = None) -> di
 
 _APPOINTMENT_TYPES = {"growth_control", "nutrition", "vaccination", "pediatrics", "other"}
 _APPOINTMENT_STATUSES = {"scheduled", "confirmed", "completed", "missed", "cancelled"}
+_APPOINTMENT_TRANSITIONS = {
+    "scheduled": {"confirmed", "completed", "missed", "cancelled"},
+    "confirmed": {"completed", "missed", "cancelled"},
+    "completed": set(),
+    "missed": set(),
+    "cancelled": set(),
+}
 
 
 def registrar_cita(
@@ -1316,6 +1334,10 @@ def actualizar_estado_cita(
     if not appointment:
         raise ValueError("Cita no encontrada.")
     verificar_acceso_profesional(professional_user_id, appointment["child_id"])
+    if status not in _APPOINTMENT_TRANSITIONS.get(appointment["status"], set()):
+        raise ValueError(
+            f"Transición de cita no permitida: {appointment['status']} → {status}."
+        )
     updates = {"status": status, "updated_at": _now()}
     if client:
         return client.table("appointments").update(updates).eq("id", appointment_id).execute().data[0]

@@ -119,6 +119,31 @@ guarda como pendiente de confirmar, sin semáforo ni alerta automática. Solo se
 rechazan entradas sin un número, negativas, iguales a cero o fuera incluso del
 rango técnico de captura.
 
+Las mediciones conservan dos procedencias independientes:
+
+- `source = 'caregiver'` y `verification_status = 'reported'`: medición en casa,
+  preliminar. Puede calcular una orientación y generar una
+  `verification_request`, pero no reemplaza la referencia clínica.
+- `source = 'health_worker'` y `verification_status = 'verified'`: medición
+  registrada por personal autenticado. Puede generar una `clinical_alert`.
+
+No se promedian, corrigen ni sobrescriben valores de una fuente con la otra.
+`consultar_estado()` entrega `reported_trajectory`, `verified_trajectory`,
+`latest_reported` y `latest_verified`; `latest` se conserva solo por
+compatibilidad. La app debe dibujar la serie familiar como preliminar y la serie
+clínica como referencia verificada.
+
+También se admite captura etiquetada en un único mensaje, siempre seguida de una
+confirmación explícita:
+
+```text
+Registrar medición: peso 10.4 kg, talla 82 cm, acostado,
+MUAC 128 mm, edema no, fecha 14/08/2026
+```
+
+Si falta un campo, el bot continúa desde ese punto sin pedir nuevamente los datos
+que logró normalizar.
+
 Los comandos `REGISTRAR`, `MEDICIÓN`, `TALLA`, `ESTADO`, `ESTABLECIMIENTO`,
 `SEGUIMIENTO`, `SUPLEMENTOS`, `TOMA`, `AYUDA` y `CANCELAR` siempre
 deben funcionar aunque Groq esté caído o no tenga cuota.
@@ -169,6 +194,28 @@ de atención de 24 horas debe usar una plantilla aprobada en Kapso/WhatsApp.
 
 Para habilitar el módulo en un Supabase existente, ejecutar
 `db/migrations/20260813_supplement_tracking.sql` en SQL Editor.
+
+#### API para personal de salud y citas
+
+Las rutas `/clinical/*` exigen `Authorization: Bearer <access token de Supabase>`.
+El backend valida el token, la membresía en `health_center_members` y que la niña
+o niño pertenezca al establecimiento del profesional. Nunca se usa la identidad
+de WhatsApp como autorización clínica.
+
+| Método | Ruta | Función |
+|---|---|---|
+| `GET` | `/clinical/children/{id}/history` | Trayectorias separadas, alertas y citas |
+| `POST` | `/clinical/children/{id}/measurements` | Medición clínica verificada y cálculo OMS |
+| `GET/POST` | `/clinical/children/{id}/appointments` | Consultar o crear citas |
+| `PATCH` | `/clinical/appointments/{id}` | Cambiar estado de una cita |
+| `POST` | `/clinical/children/{id}/ask` | Preguntar por última medición, alertas, citas o resumen |
+
+El endpoint de preguntas produce resúmenes deterministas de datos almacenados;
+no delega decisiones clínicas al LLM. Las citas se guardan en `appointments` con
+profesional creador, establecimiento, fecha, tipo y estado. Para una base ya
+creada se debe ejecutar
+`db/migrations/20260815_measurement_sources_appointments.sql`. En un proyecto
+nuevo basta ejecutar el `db/schema.sql` completo.
 
 #### Guardrails clínicos y de privacidad
 

@@ -78,7 +78,7 @@ create table if not exists public.measurements (
   validation_status text not null default 'valid' check (validation_status in ('valid','needs_review')),
   validation_notes text check (validation_notes is null or char_length(validation_notes) <= 500),
   created_at timestamptz not null default now(),
-  check (
+  constraint measurements_source_verification_check check (
     (source = 'caregiver' and verification_status = 'reported' and verified_at is null) or
     (source = 'health_worker' and verification_status = 'verified' and verified_at is not null)
   )
@@ -370,6 +370,23 @@ drop trigger if exists appointments_set_updated_at on public.appointments;
 create trigger appointments_set_updated_at before update on public.appointments
 for each row execute function public.set_updated_at();
 
+create or replace function public.validate_appointment_transition()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if old.status <> new.status and not (
+    (old.status = 'scheduled' and new.status in ('confirmed','completed','missed','cancelled')) or
+    (old.status = 'confirmed' and new.status in ('completed','missed','cancelled'))
+  ) then
+    raise exception 'Transición de cita no permitida: % -> %', old.status, new.status;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists appointments_validate_transition on public.appointments;
+create trigger appointments_validate_transition before update of status on public.appointments
+for each row execute function public.validate_appointment_transition();
+
 create or replace function public.sync_child_health_center_to_alerts()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
@@ -450,7 +467,12 @@ join public.caregivers cg on cg.id = c.caregiver_id
 join lateral (
   select * from public.alerts ax
   where ax.child_id = c.id and ax.estado <> 'resuelta'
-  order by case ax.nivel when 'rojo' then 1 else 2 end, ax.created_at desc limit 1
+  order by case
+    when ax.nivel = 'rojo' and ax.alert_type = 'clinical_alert' then 1
+    when ax.nivel = 'rojo' then 2
+    when ax.alert_type = 'clinical_alert' then 3
+    else 4
+  end, ax.created_at desc limit 1
 ) a on true
 join public.measurements m on m.id = a.measurement_id
 join public.assessment_results ar on ar.measurement_id = m.id

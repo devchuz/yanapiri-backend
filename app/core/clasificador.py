@@ -110,6 +110,11 @@ def detectar_accion(texto: str) -> str | None:
         return "health_center"
     measurement_terms = ("medicion", "medición", "peso", "talla", "altura", "longitud")
     measurement_verbs = ("registrar", "anotar", "guardar", "ingresar", "tomar", "hacer", "medir")
+    labeled_measurements = sum(
+        term in text for term in ("peso", "talla", "altura", "longitud", "muac", "edema")
+    )
+    if labeled_measurements >= 2:
+        return "measurement"
     if any(term in text for term in measurement_terms) and any(
         verb in text for verb in measurement_verbs
     ):

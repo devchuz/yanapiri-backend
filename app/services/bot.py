@@ -432,9 +432,20 @@ def _measurement_confirmation(data: dict) -> str:
 
 def _advance_measurement_bundle(identity: str, data: dict) -> str:
     """Continúa desde el primer dato faltante después de una captura agrupada."""
+    if "weight_kg" in data and not 0.1 <= float(data["weight_kg"]) <= 100:
+        data.pop("weight_kg", None)
+    if "height_cm" in data and not 10 <= float(data["height_cm"]) <= 250:
+        data.pop("height_cm", None)
+    if data.get("muac_mm") is not None and not 10 <= float(data["muac_mm"]) <= 1000:
+        data.pop("muac_mm", None)
     if "weight_kg" not in data:
         _save(identity, "measurement", "weight", data)
-        return "¿Cuál es su peso en kg? Ejemplo: 10.4"
+        understood = (
+            f"Entendí una talla de {data['height_cm']} cm. "
+            if data.get("height_cm") is not None
+            else ""
+        )
+        return f"{understood}¿Cuál es su peso en kg? Ejemplo: 10.4"
     if "height_cm" not in data:
         _save(identity, "measurement", "height", data)
         return _height_prompt(data)
@@ -524,12 +535,15 @@ def _family_result_message(child_name: str, saved: dict) -> str:
         )
     return (
         f"✅ *Medición guardada para {child_name}*\n\n"
+        "🏠 Fuente: reportada por la persona cuidadora\n"
+        "🔎 Estado: orientación preliminar, pendiente de confirmación clínica\n\n"
         f"📅 Fecha: {_display_date(measurement['measured_at'])}\n"
         f"⚖️ Peso: {measurement['weight_kg']} kg\n"
         f"📏 {position.capitalize()}: {measurement['height_cm']} cm\n\n"
         f"*{headings[level]}*\n\n"
         f"*¿Qué puedes hacer ahora?*\n{actions[level]}{notes}\n\n"
-        "El personal de salud podrá revisar los indicadores técnicos y la trayectoria completa.\n"
+        "Esta medición no reemplaza ni modifica la referencia registrada por personal de salud. "
+        "El personal podrá revisarla y registrar una medición clínica independiente.\n"
         "Esta orientación no reemplaza una evaluación profesional."
         f"{_family_app_link()}"
     )
@@ -602,21 +616,29 @@ def _quick_registration_step(identity: str, state: dict, message: str) -> str:
     return _finish_registration(identity, state.get("data", {}))
 
 
-def _start_measurement(identity: str, initial_height_cm: float | None = None) -> str:
+def _start_measurement(
+    identity: str,
+    initial_height_cm: float | None = None,
+    initial_message: str | None = None,
+) -> str:
     children = db.listar_ninos(identity)
     if not children:
         return (
             "Antes de guardar una talla necesito saber a qué niña o niño corresponde. "
             "Escribe REGISTRAR para registrarlo primero."
         )
+    captured = _parse_measurement_bundle(initial_message or "")
+    if initial_height_cm is not None:
+        captured["height_cm"] = initial_height_cm
     if len(children) == 1:
         data = {
             "child_id": children[0]["id"],
             "child_name": children[0]["full_name"],
             "birth_date": children[0]["birth_date"],
         }
-        if initial_height_cm is not None:
-            data["height_cm"] = initial_height_cm
+        data.update(captured)
+        if captured:
+            return _advance_measurement_bundle(identity, data)
         _save(identity, "measurement", "weight", data)
         understood = f" Entendí una talla de {initial_height_cm} cm." if initial_height_cm else ""
         tutorial = _length_tutorial(data) if initial_height_cm else ""
@@ -625,9 +647,7 @@ def _start_measurement(identity: str, initial_height_cm: float | None = None) ->
             f"necesito completar la medición. ¿Cuál es su peso en kg? Ejemplo: 10.4{tutorial}"
         )
     options = "\n".join(f"{i}. {child['full_name']}" for i, child in enumerate(children, 1))
-    data = {"children": children}
-    if initial_height_cm is not None:
-        data["height_cm"] = initial_height_cm
+    data = {"children": children, **captured}
     _save(identity, "measurement", "select_child", data)
     return f"¿A cuál de las niñas o niños registrados corresponde la medición?\n{options}"
 
@@ -674,8 +694,15 @@ def _status(identity: str) -> str:
             recent_lines.append(
                 f"{index}. {_display_date(measurement['measured_at'])}\n"
                 f"   Peso: {measurement['weight_kg']} kg | Talla: {measurement['height_cm']} cm\n"
+                f"   Fuente: {'personal de salud — verificada' if measurement.get('verification_status') == 'verified' else 'cuidador/a — preliminar'}\n"
                 f"   Orientación: {orientation}"
             )
+        clinical_reference = (state or {}).get("latest_verified")
+        reference_note = (
+            f"\nReferencia clínica más reciente: {_display_date(clinical_reference['measured_at'])}."
+            if clinical_reference
+            else "\nAún no hay una medición clínica verificada."
+        )
         count_note = (
             f"\nMostrando los 2 más recientes de {len(trajectory)} registros."
             if len(trajectory) > 2
@@ -685,6 +712,7 @@ def _status(identity: str) -> str:
             f"✅ *{child['full_name']} está registrado/a*\n"
             + "\n".join(recent_lines)
             + count_note
+            + reference_note
         )
     return (
         "📈 *Últimos registros de crecimiento*\n\n"
@@ -703,6 +731,11 @@ def _followup_menu(data: dict) -> str:
         if data.get("alert_level") == "rojo"
         else ""
     )
+    closing_label = (
+        "confirmar la medición y cerrar la solicitud de verificación"
+        if data.get("alert_type") == "verification_request"
+        else "verificar y resolver la alerta clínica"
+    )
     return (
         f"🧭 *Seguimiento de {data['child_name']}*\n\n"
         "¿Qué deseas hacer?\n"
@@ -712,7 +745,7 @@ def _followup_menu(data: dict) -> str:
         "4️⃣ Informar que necesitas ayuda para acudir\n"
         "5️⃣ Ver recomendaciones seguras para casa\n\n"
         "La familia puede informar avances, pero solo el personal de salud puede "
-        f"verificar y resolver la alerta.{urgent}\n\n"
+        f"{closing_label}.{urgent}\n\n"
         "Escribe MÁS TARDE para volver al menú sin registrar una acción."
     )
 
@@ -722,6 +755,7 @@ def _followup_data(alert: dict) -> dict:
     return {
         "alert_id": alert["id"],
         "alert_level": alert["nivel"],
+        "alert_type": alert.get("alert_type", "verification_request"),
         "child_id": child["id"],
         "child_name": child["full_name"],
         "reported_health_center": child.get("reported_health_center"),
@@ -1351,14 +1385,16 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
             child = data["children"][choice]
         except (ValueError, IndexError):
             return "Responde con el número que aparece junto al nombre."
-        selected_height = data.get("height_cm")
+        captured = {key: value for key, value in data.items() if key != "children"}
         data = {
             "child_id": child["id"],
             "child_name": child["full_name"],
             "birth_date": child["birth_date"],
         }
-        if selected_height is not None:
-            data["height_cm"] = selected_height
+        data.update(captured)
+        if captured:
+            return _advance_measurement_bundle(identity, data)
+        selected_height = data.get("height_cm")
         _save(identity, "measurement", "weight", data)
         understood = f" Conservaré la talla de {selected_height} cm." if selected_height else ""
         tutorial = _length_tutorial(data) if selected_height else ""
@@ -1366,6 +1402,10 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
             f"Mediremos a {child['full_name']}.{understood} "
             f"¿Cuál es su peso en kg? Ejemplo: 10.4{tutorial}"
         )
+    bundled = _parse_measurement_bundle(message)
+    if bundled and step != "confirm":
+        data.update(bundled)
+        return _advance_measurement_bundle(identity, data)
     if step == "weight":
         try:
             value = _weight_kg(message)
@@ -1427,16 +1467,7 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
             return "Responde SÍ o NO. Si observas edema bilateral, busca valoración presencial hoy."
         data["bilateral_edema"] = value
         _save(identity, "measurement", "confirm", data)
-        muac = f"{data['muac_mm']} mm" if data["muac_mm"] is not None else "omitido"
-        return (
-            f"📝 *Revisa los datos de {data['child_name']} antes de guardarlos*\n\n"
-            f"⚖️ Peso: {data['weight_kg']} kg\n"
-            f"📏 {'Longitud acostado/a' if data['height_mode'] == 'length' else 'Talla de pie'}: "
-            f"{data['height_cm']} cm\n"
-            f"💪 Perímetro del brazo: {muac}\n"
-            f"🦶 Hinchazón en ambos pies: {'sí' if value else 'no'}\n\n"
-            "¿Los datos coinciden con lo que mediste? Responde SÍ para guardarlos o NO para corregirlos."
-        )
+        return _measurement_confirmation(data)
     confirmed = _yes_no(message)
     if confirmed is None:
         return "Responde SÍ para guardar o NO para volver a ingresar la medición."
@@ -1448,7 +1479,7 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
         saved = db.registrar_medicion(
             whatsapp_identity=identity,
             child_id=data["child_id"],
-            measured_at=date.today().isoformat(),
+            measured_at=data.get("measured_at") or date.today().isoformat(),
             weight_kg=data["weight_kg"],
             height_cm=data["height_cm"],
             height_mode=data["height_mode"],
@@ -1460,7 +1491,7 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
             pending = db.registrar_medicion_para_revision(
                 whatsapp_identity=identity,
                 child_id=data["child_id"],
-                measured_at=date.today().isoformat(),
+                measured_at=data.get("measured_at") or date.today().isoformat(),
                 weight_kg=data["weight_kg"],
                 height_cm=data["height_cm"],
                 height_mode=data["height_mode"],
@@ -1484,6 +1515,7 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
         )
         return (
             f"✅ *Guardé la medición de {data['child_name']} como pendiente de confirmar*\n\n"
+            "🏠 Fuente: reportada por la persona cuidadora\n"
             f"📅 Fecha: {_display_date(measurement['measured_at'])}\n"
             f"⚖️ Peso reportado: {measurement['weight_kg']} kg\n"
             f"📏 Talla reportada: {measurement['height_cm']} cm\n\n"
@@ -1605,7 +1637,11 @@ def respond(message: str, identity: str) -> str:
         if action == "registration":
             answer = _start_registration(identity)
         elif action == "measurement":
-            answer = _start_measurement(identity, _height_candidate(message))
+            answer = _start_measurement(
+                identity,
+                _height_candidate(message),
+                initial_message=message,
+            )
         elif action == "status":
             answer = _status(identity)
         elif action == "health_center":
