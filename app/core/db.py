@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from copy import deepcopy
 from datetime import date, datetime, timedelta, timezone
+import re
 from threading import RLock
+import unicodedata
 from uuid import uuid4
 
 from . import config
@@ -24,6 +26,10 @@ class MeasurementReviewStorageUnavailableError(RuntimeError):
 
 class SupplementStorageUnavailableError(RuntimeError):
     """El esquema SRSI todavía no fue aplicado en Supabase."""
+
+
+class DniStorageUnavailableError(RuntimeError):
+    """Las columnas de DNI todavía no fueron aplicadas en Supabase."""
 
 
 def _empty_memory() -> dict:
@@ -62,6 +68,29 @@ def _date_text(value: date | datetime | str) -> str:
     if isinstance(value, date):
         return value.isoformat()
     return str(value)[:10]
+
+
+def _dni_text(value: str | None) -> str | None:
+    if value is None or not str(value).strip():
+        return None
+    compact = re.sub(r"[\s.-]", "", str(value).strip())
+    if not re.fullmatch(r"[0-9]{8}", compact):
+        raise ValueError("El DNI debe tener exactamente 8 dígitos.")
+    return compact
+
+
+def _person_name_key(value: str) -> str:
+    """Normaliza espacios, tildes y signos para detectar el mismo registro infantil."""
+    normalized = unicodedata.normalize("NFKD", str(value or "")).casefold()
+    without_marks = "".join(
+        char for char in normalized if unicodedata.category(char) != "Mn"
+    )
+    return " ".join(re.findall(r"[a-z0-9]+", without_marks))
+
+
+def _unique_violation(exc: Exception) -> bool:
+    detail = str(exc).casefold()
+    return "23505" in detail or "duplicate key" in detail or "unique constraint" in detail
 
 
 def _alert_priority_key(alert: dict) -> tuple[int, float]:
@@ -386,6 +415,7 @@ def registrar_cuidador(
     full_name: str,
     relationship: str,
     district: str,
+    dni: str | None = None,
     phone_number: str | None = None,
     consent_version: str = "2026-08-v1",
 ) -> dict:
@@ -393,6 +423,7 @@ def registrar_cuidador(
     full_name = " ".join(str(full_name or "").split())
     relationship = str(relationship or "cuidador").strip().lower()
     district = " ".join(str(district or "").split())
+    dni = _dni_text(dni)
     if len(full_name) < 2:
         raise ValueError("Escribe el nombre de la persona cuidadora.")
     if relationship not in {"madre", "padre", "cuidador"}:
@@ -402,6 +433,31 @@ def registrar_cuidador(
 
     client = _get_client()
     caregiver = _caregiver_for_identity(whatsapp_identity)
+    if caregiver and caregiver.get("dni") and dni and caregiver["dni"] != dni:
+        raise ValueError("El DNI no coincide con el registro de esta persona cuidadora.")
+    if dni:
+        try:
+            if client:
+                same_dni = _response_data(
+                    client.table("caregivers")
+                    .select("*")
+                    .eq("dni", dni)
+                    .maybe_single()
+                    .execute()
+                )
+            else:
+                same_dni = next(
+                    (row for row in _mem["caregivers"] if row.get("dni") == dni), None
+                )
+        except Exception as exc:
+            detail = str(exc).casefold()
+            if "pgrst204" in detail and "dni" in detail:
+                raise DniStorageUnavailableError from exc
+            raise
+        if same_dni and (not caregiver or same_dni["id"] != caregiver["id"]):
+            raise ValueError(
+                "Este DNI ya está asociado a otro registro. Por seguridad, solicita verificación al equipo."
+            )
     now = _now()
     values = {
         "full_name": full_name,
@@ -414,6 +470,8 @@ def registrar_cuidador(
     }
     if phone_number:
         values["phone_number"] = phone_number
+    if dni:
+        values["dni"] = dni
 
     if caregiver:
         if client:
@@ -422,6 +480,8 @@ def registrar_cuidador(
             except Exception as exc:
                 # Compatibilidad hasta aplicar la migración nueva en Supabase.
                 detail = str(exc).lower()
+                if "pgrst204" in detail and "dni" in detail:
+                    raise DniStorageUnavailableError from exc
                 if "pgrst204" not in detail:
                     raise
                 legacy = {
@@ -446,6 +506,8 @@ def registrar_cuidador(
             response = client.table("caregivers").insert(caregiver).execute()
         except Exception as exc:
             detail = str(exc).lower()
+            if "pgrst204" in detail and "dni" in detail:
+                raise DniStorageUnavailableError from exc
             if "pgrst204" not in detail:
                 raise
             legacy = {
@@ -502,6 +564,8 @@ def registrar_nino(
     sex: str,
     district: str,
     caregiver_relationship: str = "cuidador",
+    caregiver_dni: str | None = None,
+    child_dni: str | None = None,
     phone_number: str | None = None,
     health_center_id: str | None = None,
     reported_health_center: str | None = None,
@@ -509,57 +573,44 @@ def registrar_nino(
     sex = sex.strip().upper()
     if sex not in {"M", "F"}:
         raise ValueError("El sexo debe ser M o F.")
-    caregiver = _caregiver_for_identity(whatsapp_identity)
+    child_dni = _dni_text(child_dni)
+    caregiver = registrar_cuidador(
+        whatsapp_identity=whatsapp_identity,
+        full_name=caregiver_name,
+        relationship=caregiver_relationship,
+        district=district,
+        dni=caregiver_dni,
+        phone_number=phone_number,
+    )
     client = _get_client()
-    if caregiver is None:
-        caregiver = {
-            "id": _uuid(),
-            "whatsapp_identity": str(whatsapp_identity),
-            "phone_number": phone_number,
-            "full_name": caregiver_name.strip(),
-            "relationship": caregiver_relationship.strip().lower(),
-            "district": district.strip(),
-            "consent_at": _now(),
-            "created_at": _now(),
-            "updated_at": _now(),
-        }
-        if client:
-            try:
-                response = client.table("caregivers").insert(caregiver).execute()
-            except Exception as exc:
-                if not _missing_relationship_column(exc):
-                    raise
-                # Compatibilidad temporal hasta ejecutar la migración de
-                # caregivers.relationship en el SQL Editor.
-                legacy_caregiver = {k: v for k, v in caregiver.items() if k != "relationship"}
-                response = client.table("caregivers").insert(legacy_caregiver).execute()
-                print("[supabase] falta caregivers.relationship; registro guardado sin relación")
-            caregiver = _response_data(response, [])[0]
-        else:
-            _mem["caregivers"].append(caregiver)
-    else:
-        updates = {
-            "full_name": caregiver_name.strip(),
-            "relationship": caregiver_relationship.strip().lower(),
-            "district": district.strip(),
-            "updated_at": _now(),
-        }
-        if phone_number:
-            updates["phone_number"] = phone_number
-        if client:
-            try:
-                client.table("caregivers").update(updates).eq("id", caregiver["id"]).execute()
-            except Exception as exc:
-                if not _missing_relationship_column(exc):
-                    raise
-                legacy_updates = {k: v for k, v in updates.items() if k != "relationship"}
-                client.table("caregivers").update(legacy_updates).eq("id", caregiver["id"]).execute()
-                print("[supabase] falta caregivers.relationship; relación no persistida")
-            caregiver = {**caregiver, **updates}
-        else:
-            caregiver.update(updates)
 
-    normalized_child_name = " ".join(child_name.split()).casefold()
+    if child_dni:
+        try:
+            if client:
+                same_dni_child = _response_data(
+                    client.table("children")
+                    .select("*")
+                    .eq("dni", child_dni)
+                    .maybe_single()
+                    .execute()
+                )
+            else:
+                same_dni_child = next(
+                    (row for row in _mem["children"] if row.get("dni") == child_dni), None
+                )
+        except Exception as exc:
+            detail = str(exc).casefold()
+            if "pgrst204" in detail and "dni" in detail:
+                raise DniStorageUnavailableError from exc
+            raise
+        if same_dni_child:
+            if same_dni_child["caregiver_id"] == caregiver["id"]:
+                return {**deepcopy(same_dni_child), "_already_registered": True}
+            raise ValueError(
+                "Este DNI infantil ya está asociado a otro registro. Por seguridad, solicita verificación al equipo."
+            )
+
+    normalized_child_name = _person_name_key(child_name)
     normalized_birth_date = _date_text(birth_date)
     if client:
         possible_duplicates = (
@@ -584,7 +635,7 @@ def registrar_nino(
         (
             child
             for child in possible_duplicates
-            if " ".join(str(child["full_name"]).split()).casefold() == normalized_child_name
+            if _person_name_key(str(child["full_name"])) == normalized_child_name
         ),
         None,
     )
@@ -597,6 +648,7 @@ def registrar_nino(
         "id": _uuid(),
         "caregiver_id": caregiver["id"],
         "health_center_id": health_center_id,
+        "dni": child_dni,
         "full_name": child_name.strip(),
         "birth_date": normalized_birth_date,
         "sex": sex,
@@ -607,8 +659,50 @@ def registrar_nino(
         "updated_at": _now(),
     }
     if client:
-        return client.table("children").insert(child).execute().data[0]
+        try:
+            return client.table("children").insert(child).execute().data[0]
+        except Exception as exc:
+            # El índice único protege frente a dos webhooks simultáneos que
+            # intenten confirmar el mismo registro.
+            if not _unique_violation(exc):
+                raise
+            rows = (
+                client.table("children")
+                .select("*")
+                .eq("caregiver_id", caregiver["id"])
+                .eq("birth_date", normalized_birth_date)
+                .eq("active", True)
+                .execute()
+                .data
+                or []
+            )
+            existing = next(
+                (
+                    row
+                    for row in rows
+                    if _person_name_key(str(row.get("full_name") or ""))
+                    == normalized_child_name
+                ),
+                None,
+            )
+            if existing:
+                return {**deepcopy(existing), "_already_registered": True}
+            raise
     with _lock:
+        existing = next(
+            (
+                row
+                for row in _mem["children"]
+                if row["caregiver_id"] == caregiver["id"]
+                and row["birth_date"] == normalized_birth_date
+                and row["active"]
+                and _person_name_key(str(row.get("full_name") or ""))
+                == normalized_child_name
+            ),
+            None,
+        )
+        if existing:
+            return {**deepcopy(existing), "_already_registered": True}
         _mem["children"].append(child)
     return deepcopy(child)
 
@@ -1197,7 +1291,7 @@ def registrar_medicion_para_revision(
     elif mode in {"height", "talla", "parado", "parada", "de pie"}:
         mode = "height"
     else:
-        raise ValueError("Indica si la medición fue acostado/a o parado/a.")
+        raise ValueError("Indica si la medición fue acostada, acostado o de pie.")
 
     measurement = {
         "id": _uuid(),

@@ -153,7 +153,15 @@ etiquetados de la persona cuidadora, relación, niña o niño, nacimiento, sexo,
 distrito y establecimiento. El bot normaliza la fecha y el sexo, muestra un
 resumen y no persiste nada hasta recibir una confirmación explícita. Si ya existe
 una niña o niño con el mismo nombre y nacimiento para esa persona cuidadora,
-recupera el registro existente y evita crear un duplicado.
+recupera el registro existente y evita crear un duplicado. La comparación
+normaliza mayúsculas, espacios y tildes; un índice único también protege frente
+a confirmaciones simultáneas en producción.
+
+Al elegir `MEDICIÓN`, el bot siempre muestra los registros infantiles de la
+persona cuidadora, aunque solo exista uno, junto con `Agregar nuevo`. Elegir un
+nombre inicia la medición para ese registro; `Agregar nuevo` conserva a la
+persona cuidadora y abre únicamente el alta infantil. Después de conocer el sexo
+registrado, los mensajes usan `la niña` o `el niño` y la concordancia correspondiente.
 
 `ESTADO` confirma qué niñas o niños están registrados y muestra como máximo sus
 dos mediciones más recientes. La trayectoria completa y los gráficos se consultan
@@ -506,6 +514,20 @@ solo por distrito. `district_recommendations` contiene el catálogo curado comú
 
 La service role no debe aparecer en JavaScript, una app móvil, capturas ni commits.
 Las migraciones se modifican en este repositorio, no desde la app clínica.
+
+Las altas nuevas solicitan el DNI de la persona cuidadora y de cada niña o niño
+para impedir duplicados. El bot solo muestra los dos últimos dígitos y elimina el
+DNI completo del historial, los logs y el contexto enviado a Groq. En una base ya
+creada se debe ejecutar `db/migrations/20260815_dni_identity.sql`; las columnas
+permanecen opcionales en SQL únicamente para poder completar registros históricos.
+En el MVP el valor se conserva en Supabase bajo RLS para permitir la verificación
+por personal autorizado. Antes de un piloto con datos reales se debe definir con
+la institución el cifrado o tokenización del DNI, su plazo de conservación y los
+roles que pueden consultarlo.
+
+El diseño auditable del futuro recomendador de recetas, sus fuentes, modelo de
+costos y límites está en
+[`docs/food-recommendation-methodology.md`](docs/food-recommendation-methodology.md).
 
 La demo web publicada aún apunta a `127.0.0.1:8000`, usa endpoints REST propios y
 convierte ids a enteros. La migración concreta a UUID + Supabase está documentada

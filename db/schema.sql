@@ -36,6 +36,7 @@ create table if not exists public.caregivers (
   id uuid primary key default gen_random_uuid(),
   whatsapp_identity text not null unique,
   phone_number text,
+  dni text,
   full_name text not null,
   district text not null,
   consent_at timestamptz not null,
@@ -55,10 +56,21 @@ alter table public.caregivers
 alter table public.caregivers
   add column if not exists consent_withdrawn_at timestamptz;
 
+alter table public.caregivers
+  add column if not exists dni text;
+
+alter table public.caregivers drop constraint if exists caregivers_dni_format;
+alter table public.caregivers
+  add constraint caregivers_dni_format check (dni is null or dni ~ '^[0-9]{8}$');
+
+create unique index if not exists caregivers_dni_unique
+  on public.caregivers(dni) where dni is not null;
+
 create table if not exists public.children (
   id uuid primary key default gen_random_uuid(),
   caregiver_id uuid not null references public.caregivers(id) on delete cascade,
   health_center_id uuid references public.health_centers(id) on delete set null,
+  dni text,
   full_name text not null,
   birth_date date not null,
   sex text not null check (sex in ('M','F')),
@@ -68,6 +80,46 @@ create table if not exists public.children (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.children
+  add column if not exists dni text;
+
+alter table public.children drop constraint if exists children_dni_format;
+alter table public.children
+  add constraint children_dni_format check (dni is null or dni ~ '^[0-9]{8}$');
+
+create unique index if not exists children_dni_unique
+  on public.children(dni) where dni is not null;
+
+-- Evita dos altas activas idénticas para la misma persona cuidadora. Si una
+-- instalación anterior ya tiene duplicados, no elimina información: deja un
+-- aviso para que el equipo los revise antes de volver a ejecutar el esquema.
+do $$
+begin
+  if not exists (
+    select 1 from pg_indexes
+    where schemaname = 'public' and indexname = 'children_active_identity_unique'
+  ) then
+    if exists (
+      select 1
+      from public.children
+      where active
+      group by caregiver_id, birth_date,
+        lower(regexp_replace(btrim(full_name), '\s+', ' ', 'g'))
+      having count(*) > 1
+    ) then
+      raise notice 'No se creó children_active_identity_unique: existen duplicados activos para revisar.';
+    else
+      execute 'create unique index children_active_identity_unique
+        on public.children (
+          caregiver_id,
+          birth_date,
+          lower(regexp_replace(btrim(full_name), ''\s+'', '' '', ''g''))
+        ) where active';
+    end if;
+  end if;
+end
+$$;
 
 create table if not exists public.measurements (
   id uuid primary key default gen_random_uuid(),

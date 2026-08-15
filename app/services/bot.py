@@ -29,11 +29,69 @@ def _first_name(value: str) -> str:
     return (str(value or "").strip().split() or ["hola"])[0]
 
 
+def _child_words(data: dict | None = None) -> dict[str, str]:
+    """Devuelve lenguaje concordante cuando el sexo registrado ya es conocido."""
+    sex = str((data or {}).get("sex") or "").strip().upper()
+    if sex == "F":
+        return {
+            "noun": "niña",
+            "subject": "la niña",
+            "registered": "registrada",
+            "lying": "acostada",
+            "standing": "parada",
+        }
+    if sex == "M":
+        return {
+            "noun": "niño",
+            "subject": "el niño",
+            "registered": "registrado",
+            "lying": "acostado",
+            "standing": "parado",
+        }
+    return {
+        "noun": "niña o niño",
+        "subject": "la niña o el niño",
+        "registered": "registrado",
+        "lying": "acostado o acostada",
+        "standing": "de pie",
+    }
+
+
+def _measurement_child_data(child: dict) -> dict:
+    return {
+        "child_id": child["id"],
+        "child_name": child["full_name"],
+        "birth_date": child.get("birth_date"),
+        "sex": child.get("sex"),
+    }
+
+
+def _child_from_choice(message: str, children: list[dict]) -> dict | None:
+    """Acepta el número del botón o el nombre escrito por la persona cuidadora."""
+    normalized = " ".join(_plain(message).split())
+    by_name = next(
+        (
+            child
+            for child in children
+            if " ".join(_plain(child.get("full_name") or "").split()) == normalized
+        ),
+        None,
+    )
+    if by_name:
+        return by_name
+    try:
+        return children[int(str(message).strip()) - 1]
+    except (ValueError, IndexError):
+        return None
+
+
 def _welcome(identity: str) -> str:
     caregiver = db.obtener_cuidador(identity)
     if not caregiver:
         _save(identity, "onboarding", "intro", {})
         return WELCOME
+    if not caregiver.get("dni"):
+        return _start_caregiver_dni_update(identity, next_action="welcome")
     children = db.listar_ninos(identity)
     if not children:
         db.limpiar_estado_conversacion(identity)
@@ -61,6 +119,38 @@ def _number(value: str) -> float:
     if not match:
         raise ValueError
     return float(match.group().replace(",", "."))
+
+
+def _dni(value: str) -> str | None:
+    compact = re.sub(r"[\s.-]", "", str(value or "").strip())
+    return compact if re.fullmatch(r"[0-9]{8}", compact) else None
+
+
+def _masked_dni(value: str | None) -> str:
+    digits = _dni(str(value or ""))
+    return f"******{digits[-2:]}" if digits else "pendiente"
+
+
+def _redact_dni(value: str, *, force_exact: bool = False) -> str:
+    """Oculta DNI continuo o etiquetado; en su paso acepta separadores."""
+    text = str(value or "")
+
+    def masked(raw: str) -> str:
+        digits = re.sub(r"\D", "", raw)
+        return f"******{digits[-2:]}" if len(digits) == 8 else raw
+
+    def labeled(match: re.Match) -> str:
+        return match.group(1) + masked(match.group(2))
+
+    text = re.sub(
+        r"(?i)(\bdni[^:\n]{0,35}:\s*)((?:\d[\s.-]*){7}\d)",
+        labeled,
+        text,
+    )
+    text = re.sub(r"(?<!\d)(\d{6})(\d{2})(?!\d)", r"******\2", text)
+    if force_exact and re.fullmatch(r"\s*(?:\d[\s.-]*){7}\d\s*", text):
+        return masked(text)
+    return text
 
 
 def _weight_kg(value: str) -> float:
@@ -225,6 +315,10 @@ _QUICK_REGISTRATION_LABELS = {
     "nombre cuidadora": "caregiver_name",
     "relacion": "caregiver_relationship",
     "parentesco": "caregiver_relationship",
+    "dni cuidador": "caregiver_dni",
+    "dni cuidadora": "caregiver_dni",
+    "dni de la madre": "caregiver_dni",
+    "dni de la persona cuidadora": "caregiver_dni",
     "nino": "child_name",
     "nina": "child_name",
     "nombre del nino": "child_name",
@@ -232,6 +326,11 @@ _QUICK_REGISTRATION_LABELS = {
     "nina o nino": "child_name",
     "nino o nina": "child_name",
     "menor": "child_name",
+    "dni": "child_dni",
+    "dni nino": "child_dni",
+    "dni nina": "child_dni",
+    "dni del nino": "child_dni",
+    "dni de la nina": "child_dni",
     "nacimiento": "birth_date",
     "fecha de nacimiento": "birth_date",
     "fecha nacimiento": "birth_date",
@@ -243,16 +342,20 @@ _QUICK_REGISTRATION_LABELS = {
 
 
 def _quick_registration_template(caregiver: dict | None = None) -> str:
-    caregiver_lines = (
-        ""
-        if caregiver
-        else "Cuidador: Nombre completo\nRelación: madre, padre u otra persona cuidadora\n"
-    )
+    if caregiver:
+        caregiver_lines = "" if caregiver.get("dni") else "DNI cuidador: 12345678\n"
+    else:
+        caregiver_lines = (
+            "Cuidador: Nombre completo\n"
+            "Relación: madre, padre u otra persona cuidadora\n"
+            "DNI cuidador: 12345678\n"
+        )
     return (
         "⚡ *Registro rápido*\n\n"
         "Copia este formato, completa los datos y envíalo en un solo mensaje:\n\n"
         f"{caregiver_lines}"
         "Niña o niño: Nombre completo\n"
+        "DNI: 87654321\n"
         "Nacimiento: 18/03/2024\n"
         "Sexo: femenino o masculino\n"
         f"Distrito: {(caregiver or {}).get('district') or 'Ventanilla'}\n"
@@ -278,9 +381,22 @@ def _parse_quick_registration(
     if caregiver:
         data["caregiver_name"] = caregiver["full_name"]
         data["caregiver_relationship"] = caregiver.get("relationship") or "cuidador"
+        if caregiver.get("dni"):
+            data["caregiver_dni"] = caregiver["dni"]
         data.setdefault("district", caregiver["district"])
 
     errors: list[str] = []
+    caregiver_dni = _dni(data.get("caregiver_dni", ""))
+    if caregiver_dni:
+        data["caregiver_dni"] = caregiver_dni
+    else:
+        errors.append("DNI de la persona cuidadora (8 dígitos)")
+
+    child_dni = _dni(data.get("child_dni", ""))
+    if child_dni:
+        data["child_dni"] = child_dni
+    else:
+        errors.append("DNI de la niña o niño (8 dígitos)")
     relationship = _caregiver_relationship(data.get("caregiver_relationship", ""))
     if relationship:
         data["caregiver_relationship"] = relationship
@@ -317,7 +433,9 @@ def _parse_quick_registration(
     allowed = {
         "caregiver_name",
         "caregiver_relationship",
+        "caregiver_dni",
         "child_name",
+        "child_dni",
         "birth_date",
         "sex",
         "district",
@@ -337,10 +455,13 @@ def _looks_like_quick_registration(message: str) -> bool:
 def _registration_summary(data: dict) -> str:
     center = data.get("reported_health_center") or "pendiente de vincular"
     sex = "Femenino" if data.get("sex") == "F" else "Masculino"
+    child_label = "Niña" if data.get("sex") == "F" else "Niño"
     return (
         "📝 *Revisa los datos antes de registrarlos*\n\n"
         f"Persona cuidadora: {data['caregiver_name']} ({data['caregiver_relationship']})\n"
-        f"Niña o niño: {data['child_name']}\n"
+        f"DNI de la persona cuidadora: {_masked_dni(data.get('caregiver_dni'))}\n"
+        f"{child_label}: {data['child_name']}\n"
+        f"DNI de {child_label.lower()}: {_masked_dni(data.get('child_dni'))}\n"
         f"Nacimiento: {_display_date(data['birth_date'])}\n"
         f"Sexo registrado: {sex}\n"
         f"Distrito: {data['district']}\n"
@@ -420,12 +541,17 @@ def _parse_measurement_bundle(message: str) -> dict:
 
 def _measurement_confirmation(data: dict) -> str:
     muac = f"{data['muac_mm']} mm" if data.get("muac_mm") is not None else "omitido"
+    words = _child_words(data)
+    position = (
+        f"Longitud, {words['lying']}"
+        if data["height_mode"] == "length"
+        else "Talla de pie"
+    )
     return (
         f"📝 *Revisa los datos de {data['child_name']} antes de guardarlos*\n\n"
         f"📅 Fecha: {_display_date(data.get('measured_at') or date.today().isoformat())}\n"
         f"⚖️ Peso: {data['weight_kg']} kg\n"
-        f"📏 {'Longitud acostado/a' if data['height_mode'] == 'length' else 'Talla de pie'}: "
-        f"{data['height_cm']} cm\n"
+        f"📏 {position}: {data['height_cm']} cm\n"
         f"💪 Perímetro del brazo: {muac}\n"
         f"🦶 Hinchazón en ambos pies: {'sí' if data['bilateral_edema'] else 'no'}\n\n"
         "Esta medición quedará como *reportada por la persona cuidadora* y deberá "
@@ -455,7 +581,8 @@ def _advance_measurement_bundle(identity: str, data: dict) -> str:
         return _height_prompt(data)
     if "height_mode" not in data:
         _save(identity, "measurement", "height_mode", data)
-        return "¿La talla o longitud se midió ACOSTADO/A o PARADO/A?"
+        words = _child_words(data)
+        return f"¿Mediste a {data['child_name']} {words['lying'].upper()} o DE PIE?"
     if "muac_mm" not in data:
         _save(identity, "measurement", "muac", data)
         return "¿Cuál es el MUAC en milímetros? Ejemplo: 128. Si no tienes cinta MUAC, escribe OMITIR."
@@ -511,7 +638,12 @@ def _family_result_message(child_name: str, saved: dict) -> str:
     result = saved["assessment"]
     measurement = saved["measurement"]
     level = result["semaforo"]
-    position = "longitud acostado/a" if measurement["height_mode"] == "length" else "talla de pie"
+    words = _child_words(saved.get("child"))
+    position = (
+        f"longitud, {words['lying']}"
+        if measurement["height_mode"] == "length"
+        else "talla de pie"
+    )
     headings = {
         "verde": "🟢 Sin señales de alerta con los datos registrados",
         "amarillo": "🟡 Conviene revisar esta medición",
@@ -546,8 +678,10 @@ def _save(identity: str, flow: str, step: str, data: dict) -> None:
 def _privacy_message() -> str:
     return (
         "🔐 *Uso de tus datos*\n\n"
-        "Guardamos tus datos de contacto y los registros infantiles para dar seguimiento al "
+        "Guardamos el DNI, tus datos de contacto y los registros infantiles para identificar "
+        "correctamente a cada persona y dar seguimiento al "
         "crecimiento. El personal autorizado del establecimiento vinculado podrá revisarlos.\n\n"
+        "Por seguridad, escribe únicamente los 8 dígitos del DNI; no envíes fotos del documento.\n\n"
         "Puedes dejar de usar el bot o solicitar al equipo la revisión de tus datos. "
         "Este servicio orienta y no reemplaza la atención profesional."
     )
@@ -591,20 +725,30 @@ def _onboarding_step(identity: str, state: dict, message: str) -> str:
             return "De acuerdo. No guardé datos personales. Puedes escribir HOLA cuando desees volver."
         data["consent_version"] = CONSENT_VERSION
         _save(identity, "onboarding", "relationship", data)
-        return "Paso 1 de 3. ¿Cuál es tu relación con la niña o niño?"
+        return "Paso 1 de 4. ¿Cuál es tu relación con la niña o niño?"
     if step == "relationship":
         relationship = _caregiver_relationship(message)
         if not relationship:
             return "Elige MADRE, PADRE u OTRA PERSONA CUIDADORA."
         data["relationship"] = relationship
         _save(identity, "onboarding", "name", data)
-        return "Paso 2 de 3. ¿Cuál es tu nombre completo?"
+        return "Paso 2 de 4. ¿Cuál es tu nombre completo?"
     if step == "name":
         if len(message.strip()) < 2:
             return "Escribe tu nombre completo."
         data["full_name"] = message.strip()
+        _save(identity, "onboarding", "dni", data)
+        return (
+            "Paso 3 de 4. ¿Cuál es tu DNI? Escribe únicamente sus 8 dígitos. "
+            "No envíes una foto del documento."
+        )
+    if step == "dni":
+        dni = _dni(message)
+        if not dni:
+            return "El DNI debe tener exactamente 8 dígitos. Ejemplo: 12345678."
+        data["dni"] = dni
         _save(identity, "onboarding", "district", data)
-        return "Paso 3 de 3. ¿En qué distrito vive tu familia?"
+        return "Paso 4 de 4. ¿En qué distrito vive tu familia?"
     if step == "district":
         if len(message.strip()) < 2:
             return "Escribe el distrito donde vive tu familia."
@@ -618,6 +762,7 @@ def _onboarding_step(identity: str, state: dict, message: str) -> str:
         return (
             "📝 *Revisa tu registro*\n\n"
             f"Nombre: {data['full_name']}\n"
+            f"DNI: {_masked_dni(data.get('dni'))}\n"
             f"Relación: {relationship}\n"
             f"Distrito: {data['district']}\n\n"
             "¿Los datos son correctos? Responde SÍ o NO."
@@ -628,18 +773,71 @@ def _onboarding_step(identity: str, state: dict, message: str) -> str:
     if not confirmed:
         _save(identity, "onboarding", "relationship", {"consent_version": CONSENT_VERSION})
         return "De acuerdo, corrijamos el registro. ¿Cuál es tu relación con la niña o niño?"
-    caregiver = db.registrar_cuidador(
-        whatsapp_identity=identity,
-        full_name=data["full_name"],
-        relationship=data["relationship"],
-        district=data["district"],
-        consent_version=data.get("consent_version", CONSENT_VERSION),
-    )
+    try:
+        caregiver = db.registrar_cuidador(
+            whatsapp_identity=identity,
+            full_name=data["full_name"],
+            relationship=data["relationship"],
+            district=data["district"],
+            dni=data["dni"],
+            consent_version=data.get("consent_version", CONSENT_VERSION),
+        )
+    except db.DniStorageUnavailableError:
+        return (
+            "⚠️ Falta aplicar la migración de DNI en Supabase. "
+            "El equipo debe ejecutar *db/migrations/20260815_dni_identity.sql*."
+        )
+    except ValueError as exc:
+        db.limpiar_estado_conversacion(identity)
+        return f"No pude completar el registro: {exc} Escribe INICIO para volver."
     _save(identity, "caregiver_child_offer", "confirm", {})
     return (
         f"✅ Listo, {_first_name(caregiver['full_name'])}. Tu registro como persona cuidadora está listo.\n\n"
         "¿Deseas registrar ahora a una niña o niño bajo tu cuidado?"
     )
+
+
+def _start_caregiver_dni_update(identity: str, *, next_action: str) -> str:
+    caregiver = db.obtener_cuidador(identity)
+    if not caregiver:
+        return _start_onboarding(identity, show_intro=False)
+    _save(identity, "caregiver_dni_update", "value", {"next_action": next_action})
+    return (
+        f"🔐 Hola, {_first_name(caregiver['full_name'])}. Para evitar registros duplicados "
+        "necesito completar tu DNI. Escribe únicamente sus 8 dígitos; no envíes una foto."
+    )
+
+
+def _caregiver_dni_update_step(identity: str, state: dict, message: str) -> str:
+    dni = _dni(message)
+    if not dni:
+        return "El DNI debe tener exactamente 8 dígitos. Ejemplo: 12345678."
+    caregiver = db.obtener_cuidador(identity)
+    if not caregiver:
+        return _start_onboarding(identity, show_intro=False)
+    try:
+        db.registrar_cuidador(
+            whatsapp_identity=identity,
+            full_name=caregiver["full_name"],
+            relationship=caregiver.get("relationship") or "cuidador",
+            district=caregiver["district"],
+            dni=dni,
+            phone_number=caregiver.get("phone_number"),
+            consent_version=caregiver.get("consent_version") or CONSENT_VERSION,
+        )
+    except db.DniStorageUnavailableError:
+        return (
+            "⚠️ Falta aplicar la migración de DNI en Supabase. "
+            "El equipo debe ejecutar *db/migrations/20260815_dni_identity.sql*."
+        )
+    except ValueError as exc:
+        db.limpiar_estado_conversacion(identity)
+        return f"No pude asociar ese DNI: {exc} Escribe INICIO para volver."
+    next_action = (state.get("data") or {}).get("next_action")
+    if next_action == "registration":
+        return _start_registration(identity)
+    db.limpiar_estado_conversacion(identity)
+    return "✅ DNI verificado y guardado.\n\n" + _welcome(identity)
 
 
 def _caregiver_child_offer_step(identity: str, message: str) -> str:
@@ -692,9 +890,12 @@ def _start_registration(identity: str) -> str:
     caregiver = db.obtener_cuidador(identity)
     if not caregiver:
         return _start_onboarding(identity, show_intro=False)
+    if not caregiver.get("dni"):
+        return _start_caregiver_dni_update(identity, next_action="registration")
     data = {
         "caregiver_name": caregiver["full_name"],
         "caregiver_relationship": caregiver.get("relationship") or "cuidador",
+        "caregiver_dni": caregiver["dni"],
         "district": caregiver["district"],
     }
     _save(identity, "registration", "child_name", data)
@@ -713,7 +914,16 @@ def _start_quick_registration(identity: str) -> str:
 
 
 def _finish_registration(identity: str, data: dict) -> str:
-    child = db.registrar_nino(whatsapp_identity=identity, **data)
+    try:
+        child = db.registrar_nino(whatsapp_identity=identity, **data)
+    except db.DniStorageUnavailableError:
+        return (
+            "⚠️ Falta aplicar la migración de DNI en Supabase. "
+            "El equipo debe ejecutar *db/migrations/20260815_dni_identity.sql*."
+        )
+    except ValueError as exc:
+        db.limpiar_estado_conversacion(identity)
+        return f"No pude completar el registro: {exc} Escribe INICIO para volver."
     _save(
         identity,
         "first_measurement_offer",
@@ -722,10 +932,12 @@ def _finish_registration(identity: str, data: dict) -> str:
             "child_id": child["id"],
             "child_name": child["full_name"],
             "birth_date": child["birth_date"],
+            "sex": child["sex"],
         },
     )
+    words = _child_words(child)
     confirmation = (
-        f"✅ {child['full_name']} ya estaba registrado/a; no creé un duplicado."
+        f"✅ {child['full_name']} ya estaba {words['registered']}; no creé un duplicado."
         if child.get("_already_registered")
         else f"✅ Registré correctamente a {child['full_name']}."
     )
@@ -772,36 +984,34 @@ def _start_measurement(
     captured = _parse_measurement_bundle(initial_message or "")
     if initial_height_cm is not None:
         captured["height_cm"] = initial_height_cm
-    if len(children) == 1:
-        data = {
-            "child_id": children[0]["id"],
-            "child_name": children[0]["full_name"],
-            "birth_date": children[0]["birth_date"],
-        }
-        data.update(captured)
-        if captured:
-            return _advance_measurement_bundle(identity, data)
-        _save(identity, "measurement", "weight", data)
-        understood = f" Entendí una talla de {initial_height_cm} cm." if initial_height_cm else ""
-        tutorial = _length_tutorial(data) if initial_height_cm else ""
-        return (
-            f"Mediremos a {children[0]['full_name']}.{understood} Para interpretar su crecimiento "
-            f"necesito completar la medición. ¿Cuál es su peso en kg? Ejemplo: 10.4{tutorial}"
-        )
     options = "\n".join(f"{i}. {child['full_name']}" for i, child in enumerate(children, 1))
+    new_child_number = len(children) + 1
     data = {"children": children, **captured}
     _save(identity, "measurement", "select_child", data)
-    return f"¿A cuál de las niñas o niños registrados corresponde la medición?\n{options}"
+    return (
+        "¿Para quién deseas registrar peso y talla?\n"
+        f"{options}\n{new_child_number}. Agregar una nueva niña o un nuevo niño"
+    )
 
 
 def _start_measurement_for_child(
-    identity: str, child_id: str, child_name: str, birth_date: str | None = None
+    identity: str,
+    child_id: str,
+    child_name: str,
+    birth_date: str | None = None,
+    sex: str | None = None,
 ) -> str:
+    data = {
+        "child_id": child_id,
+        "child_name": child_name,
+        "birth_date": birth_date,
+        "sex": sex,
+    }
     _save(
         identity,
         "measurement",
         "weight",
-        {"child_id": child_id, "child_name": child_name, "birth_date": birth_date},
+        data,
     )
     return f"Mediremos a {child_name}. ¿Cuál es su peso en kg? Ejemplo: 10.4"
 
@@ -829,7 +1039,7 @@ def _status(identity: str, selected_child: dict | None = None) -> str:
         trajectory = (state or {}).get("trajectory") or []
         if not trajectory:
             sections.append(
-                f"✅ *{child['full_name']} está registrado/a*\n"
+                f"✅ *{child['full_name']} está {_child_words(child)['registered']}*\n"
                 "Todavía no tiene mediciones guardadas. Escribe MEDICIÓN para registrar la primera."
             )
             continue
@@ -844,7 +1054,7 @@ def _status(identity: str, selected_child: dict | None = None) -> str:
             recent_lines.append(
                 f"{index}. {_display_date(measurement['measured_at'])}\n"
                 f"   Peso: {measurement['weight_kg']} kg | Talla: {measurement['height_cm']} cm\n"
-                f"   Fuente: {'personal de salud — verificada' if measurement.get('verification_status') == 'verified' else 'cuidador/a — preliminar'}\n"
+                f"   Fuente: {'personal de salud — verificada' if measurement.get('verification_status') == 'verified' else 'familia — preliminar'}\n"
                 f"   Orientación: {orientation}"
             )
         clinical_reference = (state or {}).get("latest_verified")
@@ -859,7 +1069,7 @@ def _status(identity: str, selected_child: dict | None = None) -> str:
             else f"\nRegistros guardados: {len(trajectory)}."
         )
         sections.append(
-            f"✅ *{child['full_name']} está registrado/a*\n"
+            f"✅ *{child['full_name']} está {_child_words(child)['registered']}*\n"
             + "\n".join(recent_lines)
             + count_note
             + reference_note
@@ -1473,6 +1683,16 @@ def _registration_step(identity: str, state: dict, message: str) -> str:
         if len(message.strip()) < 2:
             return "Escribe el nombre de la niña o niño."
         data["child_name"] = message.strip()
+        _save(identity, "registration", "child_dni", data)
+        return (
+            "🔐 ¿Cuál es el DNI de la niña o niño? Escribe únicamente sus 8 dígitos. "
+            "No envíes una foto del documento."
+        )
+    if step == "child_dni":
+        child_dni = _dni(message)
+        if not child_dni:
+            return "El DNI debe tener exactamente 8 dígitos. Ejemplo: 87654321."
+        data["child_dni"] = child_dni
         _save(identity, "registration", "birth_date", data)
         return (
             "📅 ¿Cuál es su fecha de nacimiento? Puedes escribirla de distintas formas:\n"
@@ -1501,7 +1721,7 @@ def _registration_step(identity: str, state: dict, message: str) -> str:
             return "No pude identificarlo. Responde NIÑA/FEMENINO/F o NIÑO/MASCULINO/M."
         data["sex"] = value
         _save(identity, "registration", "district_confirm", data)
-        return f"¿La niña o niño vive también en {data['district']}?"
+        return f"¿{_child_words(data)['subject'].capitalize()} vive también en {data['district']}?"
     if step == "district_confirm":
         same_district = _yes_no(message)
         if same_district is True:
@@ -1509,7 +1729,7 @@ def _registration_step(identity: str, state: dict, message: str) -> str:
             return _health_center_prompt(data["child_name"])
         if same_district is False or _plain(message) in {"otro", "otro distrito"}:
             _save(identity, "registration", "district", data)
-            return "¿En qué distrito vive la niña o niño?"
+            return f"¿En qué distrito vive {_child_words(data)['subject']}?"
         # También se acepta escribir directamente un distrito diferente.
         if len(message.strip()) >= 2:
             data["district"] = message.strip()
@@ -1518,7 +1738,7 @@ def _registration_step(identity: str, state: dict, message: str) -> str:
         return "Responde SÍ, NO o escribe directamente el distrito."
     if step == "district":
         if len(message.strip()) < 2:
-            return "Escribe el distrito donde vive la niña o niño."
+            return f"Escribe el distrito donde vive {_child_words(data)['subject']}."
         data["district"] = message.strip()
         _save(identity, "registration", "health_center", data)
         return _health_center_prompt(data["child_name"])
@@ -1542,7 +1762,11 @@ def _first_measurement_offer_step(identity: str, state: dict, message: str) -> s
     if decision:
         data = state.get("data", {})
         return _start_measurement_for_child(
-            identity, data["child_id"], data["child_name"], data.get("birth_date")
+            identity,
+            data["child_id"],
+            data["child_name"],
+            data.get("birth_date"),
+            data.get("sex"),
         )
     db.limpiar_estado_conversacion(identity)
     return "De acuerdo. Cuando tengas las medidas, escribe MEDICIÓN.\n\n" + _welcome(identity)
@@ -1552,17 +1776,26 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
     step = state["step"]
     data = state.get("data", {})
     if step == "select_child":
+        normalized = _plain(message)
+        if normalized in {
+            "nuevo",
+            "nueva",
+            "nuevo nino",
+            "nueva nina",
+            "agregar nuevo",
+            "nuevo registro",
+        }:
+            return _start_registration(identity)
         try:
-            choice = int(message.strip()) - 1
-            child = data["children"][choice]
-        except (ValueError, IndexError):
-            return "Responde con el número que aparece junto al nombre."
+            if int(message.strip()) - 1 == len(data["children"]):
+                return _start_registration(identity)
+        except ValueError:
+            pass
+        child = _child_from_choice(message, data["children"])
+        if child is None:
+            return "Elige un nombre de la lista o la opción AGREGAR NUEVO."
         captured = {key: value for key, value in data.items() if key != "children"}
-        data = {
-            "child_id": child["id"],
-            "child_name": child["full_name"],
-            "birth_date": child["birth_date"],
-        }
+        data = _measurement_child_data(child)
         data.update(captured)
         if captured:
             return _advance_measurement_bundle(identity, data)
@@ -1591,7 +1824,8 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
         data["weight_kg"] = value
         if data.get("height_cm") is not None:
             _save(identity, "measurement", "height_mode", data)
-            return "¿La talla o longitud se midió ACOSTADO/A o PARADO/A?"
+            words = _child_words(data)
+            return f"¿Mediste a {data['child_name']} {words['lying'].upper()} o DE PIE?"
         _save(identity, "measurement", "height", data)
         return _height_prompt(data)
     if step == "height":
@@ -1606,7 +1840,8 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
             )
         data["height_cm"] = value
         _save(identity, "measurement", "height_mode", data)
-        return "¿La medición se hizo ACOSTADO/A o PARADO/A?"
+        words = _child_words(data)
+        return f"¿Mediste a {data['child_name']} {words['lying'].upper()} o DE PIE?"
     if step == "height_mode":
         text = _plain(message)
         if text in {"acostado", "acostada", "longitud"}:
@@ -1614,7 +1849,8 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
         elif text in {"parado", "parada", "talla", "de pie"}:
             data["height_mode"] = "height"
         else:
-            return "Responde ACOSTADO/A o PARADO/A según cómo hiciste la medición."
+            words = _child_words(data)
+            return f"Responde {words['lying'].upper()} o DE PIE según cómo hiciste la medición."
         _save(identity, "measurement", "muac", data)
         return "¿Cuál es el MUAC en milímetros? Ejemplo: 128. Si no tienes cinta MUAC adecuada, escribe OMITIR."
     if step == "muac":
@@ -1644,7 +1880,12 @@ def _measurement_step(identity: str, state: dict, message: str) -> str:
     if confirmed is None:
         return "Responde SÍ para guardar o NO para volver a ingresar la medición."
     if not confirmed:
-        base = {"child_id": data["child_id"], "child_name": data["child_name"]}
+        base = {
+            "child_id": data["child_id"],
+            "child_name": data["child_name"],
+            "birth_date": data.get("birth_date"),
+            "sex": data.get("sex"),
+        }
         _save(identity, "measurement", "weight", base)
         return "De acuerdo, no guardé esa medición. Ingresa nuevamente el peso en kg."
     try:
@@ -1711,12 +1952,21 @@ def respond(message: str, identity: str) -> str:
     message = str(message or "").strip()
     if not message:
         return _welcome(identity)
+    state = db.estado_conversacion(identity)
     # Antes del consentimiento solo se conserva el estado temporal necesario
     # para continuar el diálogo; el historial empieza cuando el cuidador existe.
     persist_history = db.obtener_cuidador(identity) is not None
     if persist_history:
-        db.guardar_mensaje(identity, "user", message)
-    state = db.estado_conversacion(identity)
+        dni_entry = (
+            (state.get("flow") == "onboarding" and state.get("step") == "dni")
+            or (state.get("flow") == "caregiver_dni_update" and state.get("step") == "value")
+            or (state.get("flow") == "registration" and state.get("step") == "child_dni")
+        )
+        db.guardar_mensaje(
+            identity,
+            "user",
+            _redact_dni(message, force_exact=dni_entry),
+        )
     command = _plain(message)
     if command in {"cancelar", "salir"}:
         db.limpiar_estado_conversacion(identity)
@@ -1735,6 +1985,8 @@ def respond(message: str, identity: str) -> str:
         answer = danger_response(message) or _welcome(identity)
     elif state.get("flow") == "onboarding":
         answer = _onboarding_step(identity, state, message)
+    elif state.get("flow") == "caregiver_dni_update":
+        answer = _caregiver_dni_update_step(identity, state, message)
     elif state.get("flow") == "caregiver_child_offer":
         answer = _caregiver_child_offer_step(identity, message)
     elif state.get("flow") == "more_menu":
@@ -1844,5 +2096,5 @@ def respond(message: str, identity: str) -> str:
             if answer is None:
                 answer = llm_answer(message, identity) or _welcome(identity)
     if persist_history or db.obtener_cuidador(identity) is not None:
-        db.guardar_mensaje(identity, "assistant", answer)
+        db.guardar_mensaje(identity, "assistant", _redact_dni(answer))
     return answer

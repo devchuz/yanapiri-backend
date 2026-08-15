@@ -21,11 +21,14 @@ def test_returning_caregiver_gets_three_compact_home_buttons():
         full_name="Rosa",
         relationship="madre",
         district="Lima",
+        dni="12345678",
     )
     db.registrar_nino(
         whatsapp_identity=identity,
         caregiver_name="Rosa",
+        caregiver_dni="12345678",
         child_name="Mateo",
+        child_dni="87654321",
         birth_date="2025-08-15",
         sex="M",
         district="Lima",
@@ -98,7 +101,7 @@ def test_interactive_payload_matches_kapso_rest_shape():
     }
 
 
-def test_free_form_measurement_value_does_not_get_buttons():
+def test_measurement_first_selects_existing_child_or_new_registration():
     identity = "interactive-weight"
     # El registro directo prepara un flujo de medición cuyo peso debe escribirse.
     from datetime import date, timedelta
@@ -115,4 +118,14 @@ def test_free_form_measurement_value_does_not_get_buttons():
     answer = respond("MEDICIÓN", identity)
 
     assert "peso" in answer.lower()
-    assert build_presentation(identity, answer) is None
+    presentation = build_presentation(identity, answer)
+    assert presentation is not None
+    assert presentation.kind == "list"
+    assert [(option.id, option.title) for option in presentation.options] == [
+        ("1", "Mateo"),
+        ("nuevo", "Agregar nuevo"),
+    ]
+
+    weight_prompt = respond("1", identity)
+    assert "peso" in weight_prompt.lower()
+    assert build_presentation(identity, weight_prompt) is None

@@ -11,6 +11,12 @@ def setup_function():
     db.reset_memory()
 
 
+def _test_dni(identity: str, offset: int = 0) -> str:
+    """Genera DNIs ficticios estables; solo se usan en el fallback de pruebas."""
+    value = sum((index + 1) * ord(char) for index, char in enumerate(identity)) + offset
+    return f"{value % 100_000_000:08d}"
+
+
 def test_welcome_is_warm_and_starts_caregiver_onboarding():
     welcome = respond("hola", "welcome-test")
     assert "👋" in welcome
@@ -25,7 +31,9 @@ def test_registered_family_gets_personalized_welcome():
     db.registrar_nino(
         whatsapp_identity=identity,
         caregiver_name="Rosa",
+        caregiver_dni=_test_dni(identity),
         child_name="Mateo",
+        child_dni=_test_dni(identity, 1),
         birth_date=(date.today() - timedelta(days=400)).isoformat(),
         sex="M",
         district="Lima",
@@ -45,6 +53,7 @@ def test_caregiver_is_registered_before_child_and_only_after_consent():
     respond("sí", identity)
     respond("madre", identity)
     respond("Delia Gamonal", identity)
+    respond("12345678", identity)
     confirmation = respond("Ventanilla", identity)
     assert "Revisa tu registro" in confirmation
     assert db.obtener_cuidador(identity) is None
@@ -52,9 +61,83 @@ def test_caregiver_is_registered_before_child_and_only_after_consent():
     offer = respond("sí", identity)
     caregiver = db.obtener_cuidador(identity)
     assert caregiver["full_name"] == "Delia Gamonal"
+    assert caregiver["dni"] == "12345678"
     assert caregiver["consent_version"] == "2026-08-v1"
     assert db.listar_ninos(identity) == []
     assert "registrar ahora" in offer.lower()
+
+
+def test_onboarding_rejects_invalid_dni_and_never_stores_it_in_history():
+    identity = "invalid-caregiver-dni"
+    respond("registrar", identity)
+    respond("sí", identity)
+    respond("madre", identity)
+    respond("Rosa Quispe", identity)
+
+    answer = respond("1234-567", identity)
+    assert "exactamente 8 dígitos" in answer
+    assert db.estado_conversacion(identity)["step"] == "dni"
+    assert db.obtener_cuidador(identity) is None
+
+    respond("12345678", identity)
+    respond("Lima", identity)
+    respond("sí", identity)
+    respond("sí", identity)
+    respond("Mateo", identity)
+    respond("8765-4321", identity)
+    contents = [item["content"] for item in db.historial_conversacion(identity)]
+    assert "12345678" not in "\n".join(contents)
+    assert "87654321" not in "\n".join(contents)
+    assert "8765-4321" not in "\n".join(contents)
+    assert any("******21" in content for content in contents)
+
+
+def test_dni_prevents_duplicate_caregiver_and_child_records():
+    first_identity = "dni-owner"
+    child = db.registrar_nino(
+        whatsapp_identity=first_identity,
+        caregiver_name="Rosa Quispe",
+        caregiver_dni="12345678",
+        child_name="Mateo Quispe",
+        child_dni="87654321",
+        birth_date=(date.today() - timedelta(days=400)).isoformat(),
+        sex="M",
+        district="Lima",
+    )
+    same_child = db.registrar_nino(
+        whatsapp_identity=first_identity,
+        caregiver_name="Rosa Quispe",
+        caregiver_dni="12345678",
+        child_name="Mateo con nombre corregido",
+        child_dni="87654321",
+        birth_date=(date.today() - timedelta(days=401)).isoformat(),
+        sex="M",
+        district="Lima",
+    )
+    assert same_child["id"] == child["id"]
+    assert same_child["_already_registered"] is True
+    assert len(db.listar_ninos(first_identity)) == 1
+
+    with pytest.raises(ValueError, match="DNI ya está asociado"):
+        db.registrar_cuidador(
+            whatsapp_identity="other-caregiver",
+            full_name="Otra persona",
+            relationship="madre",
+            district="Lima",
+            dni="12345678",
+        )
+
+    with pytest.raises(ValueError, match="DNI infantil ya está asociado"):
+        db.registrar_nino(
+            whatsapp_identity="other-child-owner",
+            caregiver_name="Otra persona",
+            caregiver_dni="11223344",
+            child_name="Otro nombre",
+            child_dni="87654321",
+            birth_date=(date.today() - timedelta(days=300)).isoformat(),
+            sex="M",
+            district="Callao",
+        )
 
 
 def test_declining_onboarding_does_not_store_personal_data():
@@ -75,6 +158,7 @@ def test_more_options_is_compact_and_routes_to_registration():
         full_name="Rosa",
         relationship="madre",
         district="Lima",
+        dni=_test_dni(identity),
     )
     menu = respond("MÁS OPCIONES", identity)
     assert "Más opciones" in menu
@@ -97,8 +181,8 @@ def test_status_asks_for_child_instead_of_dumping_multiple_trajectories():
     prompt = respond("ESTADO", identity)
     assert "¿De quién deseas ver" in prompt
     result = respond("2", identity)
-    assert "Lucía está registrado/a" in result
-    assert "Mateo está registrado/a" not in result
+    assert "Lucía está registrada" in result
+    assert "Mateo está registrado" not in result
 
 
 def test_registration_and_measurement_flow_in_memory():
@@ -109,11 +193,13 @@ def test_registration_and_measurement_flow_in_memory():
     assert "relación" in respond("sí", identity).lower()
     assert "nombre" in respond("madre", identity).lower()
     respond("María Quispe", identity)
+    respond("12345678", identity)
     caregiver_confirmation = respond("San Juan de Lurigancho", identity)
     assert "revisa tu registro" in caregiver_confirmation.lower()
     assert "registrar ahora" in respond("sí", identity).lower()
     assert "nombre" in respond("sí", identity).lower()
     respond("Lucía", identity)
+    respond("87654321", identity)
     respond(birth, identity)
     district_confirmation = respond("F", identity)
     assert "San Juan de Lurigancho" in district_confirmation
@@ -165,11 +251,81 @@ def test_natural_height_action_prefills_height_and_requests_weight():
         sex="F",
         district="Lima",
     )
-    answer = respond("Quiero registrar una talla de 76.5 cm", identity)
+    selection = respond("Quiero registrar una talla de 76.5 cm", identity)
+    assert "Ana" in selection
+    assert "Agregar una nueva" in selection
+    answer = respond("1", identity)
     assert "76.5 cm" in answer
     assert "peso" in answer.lower()
     height_prompt = respond("8.2", identity)
-    assert "ACOSTADO" in height_prompt
+    assert "ACOSTADA" in height_prompt
+
+
+def test_measurement_selector_can_start_a_new_child_without_restarting_caregiver():
+    identity = "measurement-new-child"
+    db.registrar_nino(
+        whatsapp_identity=identity,
+        caregiver_name="Rosa",
+        caregiver_relationship="madre",
+        caregiver_dni=_test_dni(identity),
+        child_name="Mateo",
+        child_dni=_test_dni(identity, 1),
+        birth_date=(date.today() - timedelta(days=400)).isoformat(),
+        sex="M",
+        district="Lima",
+    )
+
+    selection = respond("MEDICIÓN", identity)
+    assert "1. Mateo" in selection
+    assert "2. Agregar una nueva niña o un nuevo niño" in selection
+
+    prompt = respond("2", identity)
+    assert "nombre de la niña o niño" in prompt
+    assert db.estado_conversacion(identity)["flow"] == "registration"
+    assert db.obtener_cuidador(identity)["full_name"] == "Rosa"
+    assert len(db.listar_ninos(identity)) == 1
+
+
+def test_measurement_selector_accepts_the_registered_child_name():
+    identity = "measurement-child-name"
+    db.registrar_nino(
+        whatsapp_identity=identity,
+        caregiver_name="Rosa",
+        child_name="Lucía Elena",
+        birth_date=(date.today() - timedelta(days=400)).isoformat(),
+        sex="F",
+        district="Lima",
+    )
+
+    respond("MEDICIÓN", identity)
+    prompt = respond("lucia elena", identity)
+    assert "Mediremos a Lucía Elena" in prompt
+    assert db.estado_conversacion(identity)["data"]["sex"] == "F"
+
+
+def test_child_registration_deduplicates_accents_case_and_extra_spaces():
+    identity = "normalized-child-duplicate"
+    birth = (date.today() - timedelta(days=500)).isoformat()
+    first = db.registrar_nino(
+        whatsapp_identity=identity,
+        caregiver_name="Rosa",
+        child_name="José   Luis",
+        birth_date=birth,
+        sex="M",
+        district="Lima",
+    )
+    duplicate = db.registrar_nino(
+        whatsapp_identity=identity,
+        caregiver_name="Rosa",
+        child_name=" jose luis ",
+        birth_date=birth,
+        sex="M",
+        district="Lima",
+    )
+
+    assert duplicate["id"] == first["id"]
+    assert duplicate["_already_registered"] is True
+    assert len(db.listar_ninos(identity)) == 1
 
 
 def test_height_prompt_for_under_two_includes_ins_tutorial():
@@ -182,7 +338,8 @@ def test_height_prompt_for_under_two_includes_ins_tutorial():
         sex="F",
         district="Lima",
     )
-    assert "peso" in respond("TALLA", identity).lower()
+    assert "Sol" in respond("TALLA", identity)
+    assert "peso" in respond("1", identity).lower()
     prompt = respond("7.5", identity)
     assert "Instituto Nacional de Salud" in prompt
     assert "0C6CUT8XlRc" in prompt
@@ -199,10 +356,12 @@ def test_registration_accepts_natural_birth_sex_and_unknown_center():
     respond("sí", identity)
     respond("soy su mamá", identity)
     respond("Carla Ruiz", identity)
+    respond("12345678", identity)
     respond("Ventanilla", identity)
     respond("sí", identity)
     respond("sí", identity)
     respond("Valentina", identity)
+    respond("87654321", identity)
     sex_prompt = respond(
         f"Nació el {birth.day} de {months[birth.month - 1]} de {birth.year}", identity
     )
@@ -247,6 +406,7 @@ def test_implausible_measurement_is_saved_for_review_without_red_alert():
         district="Ventanilla",
     )
     respond("MEDICIÓN", identity)
+    respond("1", identity)
     respond("10.4", identity)
     respond("50", identity)
     respond("acostado", identity)
@@ -279,6 +439,7 @@ def test_measurement_accepts_and_normalizes_common_units():
         district="Lima",
     )
     respond("MEDICIÓN", identity)
+    respond("1", identity)
     respond("10400 gramos", identity)
     respond("0.82 metros", identity)
     respond("acostado", identity)
@@ -307,10 +468,12 @@ def test_measurement_bundle_is_extracted_and_confirmed_in_one_message():
         district="Lima",
     )
 
-    confirmation = respond(
+    selection = respond(
         "Registrar medición: peso 10.4 kg, talla 82 cm, acostado, MUAC 128 mm, edema no",
         identity,
     )
+    assert "Mateo" in selection
+    confirmation = respond("1", identity)
     assert "Revisa los datos" in confirmation
     assert "10.4 kg" in confirmation
     assert "82.0 cm" in confirmation
@@ -378,6 +541,7 @@ def test_outside_oms_input_range_is_preserved_as_pending_review():
         district="Lima",
     )
     respond("MEDICIÓN", identity)
+    respond("1", identity)
     respond("45 kg", identity)
     respond("82 cm", identity)
     respond("acostado", identity)
@@ -406,6 +570,7 @@ def test_measurement_rejects_negative_value_instead_of_dropping_sign():
         district="Lima",
     )
     respond("MEDICIÓN", identity)
+    respond("1", identity)
     answer = respond("-5 kg", identity)
     assert "No pude entender el peso" in answer
     assert db.estado_conversacion(identity)["step"] == "weight"
@@ -543,6 +708,7 @@ def test_status_uses_family_language_without_z_scores():
         district="Lima",
     )
     respond("MEDICIÓN", identity)
+    respond("1", identity)
     respond("8.9", identity)
     respond("74", identity)
     respond("acostada", identity)
@@ -559,7 +725,9 @@ def _create_yellow_alert(identity: str, child_name: str = "Mateo") -> dict:
     child = db.registrar_nino(
         whatsapp_identity=identity,
         caregiver_name="Persona cuidadora",
+        caregiver_dni=_test_dni(identity),
         child_name=child_name,
+        child_dni=_test_dni(identity, 1),
         birth_date=(date.today() - timedelta(days=365)).isoformat(),
         sex="M",
         district="Ventanilla",
@@ -665,6 +833,7 @@ def test_quick_registration_accepts_all_data_and_confirms_before_saving():
         full_name="Rosa Quispe",
         relationship="madre",
         district="Ventanilla",
+        dni="12345678",
     )
     prompt = respond("REGISTRO RÁPIDO", identity)
     assert "Copia este formato" in prompt
@@ -675,6 +844,7 @@ def test_quick_registration_accepts_all_data_and_confirms_before_saving():
                 "Cuidador: Rosa Quispe",
                 "Relación: madre",
                 "Niña o niño: Mateo Quispe",
+                "DNI: 87654321",
                 f"Nacimiento: {birth}",
                 "Sexo: masculino",
                 "Distrito: Ventanilla",

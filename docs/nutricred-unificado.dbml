@@ -218,6 +218,7 @@ Table public.caregivers [headerColor: #2F80ED, note: 'Cuidador que interactúa c
   parent_business_scoped_user_id text
   whatsapp_username text [note: 'Puede cambiar; no usar como llave primaria.']
   phone_number text [note: 'E.164; puede ser NULL cuando Meta protege el número.']
+  dni text [unique, note: '8 dígitos. Obligatorio en altas nuevas y oculto en logs/LLM.']
   full_name text [not null]
   preferred_language family_language [not null, default: 'es']
   ubigeo varchar(6)
@@ -230,6 +231,7 @@ Table public.children [headerColor: #2F80ED, note: 'Niñas y niños menores de c
   id uuid [pk, not null, default: `gen_random_uuid()`]
   caregiver_id uuid [not null]
   health_center_id uuid [note: 'Puede quedar pendiente hasta que se resuelva el establecimiento.']
+  dni text [unique, note: '8 dígitos. Identidad deduplicada de la niña o niño.']
   full_name text [not null]
   birth_date date [not null]
   sex child_sex [not null, note: 'Selecciona la tabla LMS OMS correspondiente.']

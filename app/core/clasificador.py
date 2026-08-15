@@ -41,7 +41,7 @@ FAQS = [
         "keywords": ["talla", "altura", "longitud", "acostado", "parado", "medir"],
         "question": "¿Cómo mido la longitud o talla?",
         "answer": (
-            "Antes de los 2 años se recomienda longitud acostado/a con infantómetro; desde los 2 años, talla de pie. "
+            "Antes de los 2 años se recomienda medir la longitud con la niña o el niño acostado; desde los 2 años, talla de pie. "
             "Cabeza, tronco y piernas deben quedar alineados. Una cinta de costura no sustituye el equipo validado."
             f"\n\nTutorial del Instituto Nacional de Salud para longitud en menores de 2 años:\n"
             f"{config.TUTORIAL_LONGITUD_URL}"

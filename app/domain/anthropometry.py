@@ -178,14 +178,14 @@ def assess_child(
     elif mode in {"parado", "parada", "talla", "height", "h"}:
         mode = "height"
     if mode not in {"length", "height"}:
-        raise AnthropometryError("Indica si la medición fue acostado/a o parado/a.")
+        raise AnthropometryError("Indica si la medición fue acostada, acostado o de pie.")
 
     warnings: list[str] = []
     adjusted_height = height
     use_length = days < TWO_YEARS_DAYS
     if use_length and mode == "height":
         adjusted_height += 0.7
-        warnings.append("Se añadieron 0.7 cm porque, antes de los 2 años, la OMS usa longitud acostado/a.")
+        warnings.append("Se añadieron 0.7 cm porque, antes de los 2 años, la OMS usa longitud con el menor acostado.")
     elif not use_length and mode == "length":
         adjusted_height -= 0.7
         warnings.append("Se restaron 0.7 cm porque, desde los 2 años, la OMS usa talla de pie.")

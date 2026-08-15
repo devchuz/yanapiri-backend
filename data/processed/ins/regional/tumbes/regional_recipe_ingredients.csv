@@ -1,0 +1,555 @@
+recipe_id,department,component,ingredient_order,ingredient_original,quantity,unit_original,quantity_normalized_g,quantity_normalized_ml,source_page
+TUM_REC_0001,Tumbes,Ensalada criolla,1,tomate,2,tomates medianos,,,13-14
+TUM_REC_0001,Tumbes,Ensalada criolla,2,cebolla,1,cebolla pequeña,,,13-14
+TUM_REC_0001,Tumbes,Ensalada criolla,3,perejil,8,hojas,,,13-14
+TUM_REC_0001,Tumbes,Ensalada criolla,4,ají amarillo,0.25,,,,13-14
+TUM_REC_0001,Tumbes,Ensalada criolla,5,limón,1,unidad,,,13-14
+TUM_REC_0001,Tumbes,Ensalada criolla,6,sal yodada,,"al gusto, con moderación",,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,1,arroz,1.25,tazas,,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,2,frijol panamito,1,taza,,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,3,pota,200,g,200,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,4,aceite vegetal,9,cucharadas,,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,5,cebolla,0.5,cebolla mediana,,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,6,tomate,0.5,tomate pequeño,,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,7,harina de maíz,2,cucharadas,,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,8,huevo,2,unidad,,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,9,ajo,3,cucharaditas,,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,10,mostaza y pimienta,,al gusto,,,13-14
+TUM_REC_0001,Tumbes,Guiso de panamito con chicharrón de pota,11,sal yodada,,con moderación,,,13-14
+TUM_REC_0001,Tumbes,Refresco de maíz morado,1,maíz morado,2,unidades,,,13-14
+TUM_REC_0001,Tumbes,Refresco de maíz morado,2,azúcar,8,cucharaditas,,,13-14
+TUM_REC_0001,Tumbes,Refresco de maíz morado,3,limón,1,unidad,,,13-14
+TUM_REC_0001,Tumbes,Fruta,1,melón,4,tajadas medianas picadas,,,13-14
+TUM_REC_0002,Tumbes,"Ensalada de cebolla, tomate y lechuga",1,tomate,2,tomates medianos,,,15-16
+TUM_REC_0002,Tumbes,"Ensalada de cebolla, tomate y lechuga",2,cebolla,1,cebolla pequeña,,,15-16
+TUM_REC_0002,Tumbes,"Ensalada de cebolla, tomate y lechuga",3,lechuga,8,hojas,,,15-16
+TUM_REC_0002,Tumbes,"Ensalada de cebolla, tomate y lechuga",4,aceite vegetal,2,cucharadas,,,15-16
+TUM_REC_0002,Tumbes,"Ensalada de cebolla, tomate y lechuga",5,limón,1,unidad,,,15-16
+TUM_REC_0002,Tumbes,"Ensalada de cebolla, tomate y lechuga",6,sal yodada,,con moderación,,,15-16
+TUM_REC_0002,Tumbes,Majado con pescado frito,1,pescado,4,filetes de 100 g c/u,,,15-16
+TUM_REC_0002,Tumbes,Majado con pescado frito,2,arroz,1.25,tazas,,,15-16
+TUM_REC_0002,Tumbes,Majado con pescado frito,3,plátano verde,1,plátano mediano,,,15-16
+TUM_REC_0002,Tumbes,Majado con pescado frito,4,ají amarillo,0.5,ají amarillo pequeño,,,15-16
+TUM_REC_0002,Tumbes,Majado con pescado frito,5,cebolla,0.5,cebolla pequeña,,,15-16
+TUM_REC_0002,Tumbes,Majado con pescado frito,6,ajo,1.5,cucharaditas,,,15-16
+TUM_REC_0002,Tumbes,Majado con pescado frito,7,cebolla china,1,cucharada,,,15-16
+TUM_REC_0002,Tumbes,Majado con pescado frito,8,aceite vegetal,9,cucharadas,,,15-16
+TUM_REC_0002,Tumbes,Majado con pescado frito,9,"culantro, pimienta y comino",,al gusto,,,15-16
+TUM_REC_0002,Tumbes,Majado con pescado frito,10,sal yodada,,con moderación,,,15-16
+TUM_REC_0002,Tumbes,Refresco de limón,1,limón,2,limones,,,15-16
+TUM_REC_0002,Tumbes,Refresco de limón,2,azúcar,8,cucharaditas,,,15-16
+TUM_REC_0002,Tumbes,Refresco de limón,3,agua hervida fría,1,litro,,,15-16
+TUM_REC_0002,Tumbes,Fruta,1,mandarina,4,mandarinas medianas,,,15-16
+TUM_REC_0003,Tumbes,Ensalada de pepinillo,1,tomate,1,tomate mediano,,,17-18
+TUM_REC_0003,Tumbes,Ensalada de pepinillo,2,cebolla,1,cebolla pequeña,,,17-18
+TUM_REC_0003,Tumbes,Ensalada de pepinillo,3,pepinillo,0.5,pepinillo mediano,,,17-18
+TUM_REC_0003,Tumbes,Ensalada de pepinillo,4,limón,1,unidad,,,17-18
+TUM_REC_0003,Tumbes,Ensalada de pepinillo,5,sal yodada,,con moderación,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,1,fideo tallarín,350,g,350,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,2,hígado de res,4,filetes de 100 g c/u,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,3,espinaca,11,hojas,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,4,aceite vegetal,9,cucharadas,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,5,ajo,1.5,cucharaditas,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,6,leche evaporada,0.16666666666666666,taza,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,7,queso,1,tajada,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,8,papa,1,papa mediana,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,9,cebolla,0.5,cebolla mediana,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,10,tomate,2,rodajas,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,11,huevo,1,unidad,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,12,pimienta y comino,,al gusto,,,17-18
+TUM_REC_0003,Tumbes,Tallarín verde con hígado,13,sal yodada,,con moderación,,,17-18
+TUM_REC_0003,Tumbes,Refresco de piña,1,piña,2,tazas picadas,,,17-18
+TUM_REC_0003,Tumbes,Refresco de piña,2,azúcar,8,cucharaditas,,,17-18
+TUM_REC_0003,Tumbes,Refresco de piña,3,agua hervida fría,1,litro,,,17-18
+TUM_REC_0003,Tumbes,Fruta,1,naranja,4,naranjas medianas,,,17-18
+TUM_REC_0004,Tumbes,Ensalada rusa,1,lechuga,4,hojas,,,19-20
+TUM_REC_0004,Tumbes,Ensalada rusa,2,betarraga,1,betarraga pequeña,,,19-20
+TUM_REC_0004,Tumbes,Ensalada rusa,3,zanahoria,1,zanahoria mediana,,,19-20
+TUM_REC_0004,Tumbes,Ensalada rusa,4,arveja fresca,0.5,taza,,,19-20
+TUM_REC_0004,Tumbes,Ensalada rusa,5,choclo,0.25,taza,,,19-20
+TUM_REC_0004,Tumbes,Ensalada rusa,6,limón,1,unidad,,,19-20
+TUM_REC_0004,Tumbes,Ensalada rusa,7,sal yodada,,con moderación,,,19-20
+TUM_REC_0004,Tumbes,Picante de sangrecita con patacones al ajo,1,arroz,1.25,tazas,,,19-20
+TUM_REC_0004,Tumbes,Picante de sangrecita con patacones al ajo,2,plátano verde,4,plátanos verdes medianos,,,19-20
+TUM_REC_0004,Tumbes,Picante de sangrecita con patacones al ajo,3,sangre de pollo,400,g,400,,19-20
+TUM_REC_0004,Tumbes,Picante de sangrecita con patacones al ajo,4,aceite vegetal,2,cucharadas,,,19-20
+TUM_REC_0004,Tumbes,Picante de sangrecita con patacones al ajo,5,ajo,1.5,cucharaditas,,,19-20
+TUM_REC_0004,Tumbes,Picante de sangrecita con patacones al ajo,6,cebolla china,4,cabezas,,,19-20
+TUM_REC_0004,Tumbes,Picante de sangrecita con patacones al ajo,7,ají amarillo,0.5,unidad pequeña,,,19-20
+TUM_REC_0004,Tumbes,Picante de sangrecita con patacones al ajo,8,ají amarillo molido,2,cucharadas,,,19-20
+TUM_REC_0004,Tumbes,Picante de sangrecita con patacones al ajo,9,sal yodada,,con moderación,,,19-20
+TUM_REC_0004,Tumbes,Picante de sangrecita con patacones al ajo,10,"hierba buena, pimienta y comino",,al gusto,,,19-20
+TUM_REC_0004,Tumbes,Refresco de carambola,1,carambola,1,unidad,,,19-20
+TUM_REC_0004,Tumbes,Refresco de carambola,2,azúcar,8,cucharaditas,,,19-20
+TUM_REC_0004,Tumbes,Refresco de carambola,3,agua hervida fría,1,litro,,,19-20
+TUM_REC_0004,Tumbes,Fruta,1,piña,4,rodajas delgadas,,,19-20
+TUM_REC_0005,Tumbes,Ensalada de espinaca,1,tomate,2,unidad,,,21-22
+TUM_REC_0005,Tumbes,Ensalada de espinaca,2,espinaca,8,hojas,,,21-22
+TUM_REC_0005,Tumbes,Ensalada de espinaca,3,queso,4,tajadas,,,21-22
+TUM_REC_0005,Tumbes,Ensalada de espinaca,4,limón,1,unidad,,,21-22
+TUM_REC_0005,Tumbes,Ensalada de espinaca,5,sal yodada,,con moderación,,,21-22
+TUM_REC_0005,Tumbes,Guiso de pota con frijol,1,arroz,1.25,tazas,,,21-22
+TUM_REC_0005,Tumbes,Guiso de pota con frijol,2,frijol bayo,1,taza,,,21-22
+TUM_REC_0005,Tumbes,Guiso de pota con frijol,3,pota,200,g,200,,21-22
+TUM_REC_0005,Tumbes,Guiso de pota con frijol,4,zanahoria,1,zanahoria mediana,,,21-22
+TUM_REC_0005,Tumbes,Guiso de pota con frijol,5,tomate,1,tomate grande,,,21-22
+TUM_REC_0005,Tumbes,Guiso de pota con frijol,6,cebolla,0.5,cebolla pequeña,,,21-22
+TUM_REC_0005,Tumbes,Guiso de pota con frijol,7,ajo,2,cucharaditas,,,21-22
+TUM_REC_0005,Tumbes,Guiso de pota con frijol,8,aceite vegetal,10,cucharadas,,,21-22
+TUM_REC_0005,Tumbes,Guiso de pota con frijol,9,sal yodada,,con moderación,,,21-22
+TUM_REC_0005,Tumbes,Guiso de pota con frijol,10,"hoja de laurel, pimienta y comino",,al gusto,,,21-22
+TUM_REC_0005,Tumbes,Refresco de maracuyá,1,maracuyá,1,unidad,,,21-22
+TUM_REC_0005,Tumbes,Refresco de maracuyá,2,azúcar,8,cucharaditas,,,21-22
+TUM_REC_0005,Tumbes,Refresco de maracuyá,3,agua hervida fría,1,litro,,,21-22
+TUM_REC_0005,Tumbes,Fruta,1,plátano de seda,4,plátanos medianos,,,21-22
+TUM_REC_0006,Tumbes,Ensalada de palta,1,tomate,2,tomates medianos,,,23-24
+TUM_REC_0006,Tumbes,Ensalada de palta,2,cebolla,1,cebolla pequeña,,,23-24
+TUM_REC_0006,Tumbes,Ensalada de palta,3,palta,1,palta pequeña,,,23-24
+TUM_REC_0006,Tumbes,Ensalada de palta,4,limón,1,unidad,,,23-24
+TUM_REC_0006,Tumbes,Ensalada de palta,5,sal yodada,,con moderación,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,1,arroz,1.25,tazas,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,2,arveja fresca,0.25,taza,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,3,frijol zarandaja,1,taza,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,4,corazón de pollo,4,filetes de 50 g c/u,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,5,zanahoria,1,zanahoria mediana,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,6,tomate,1,tomate mediano,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,7,cebolla,1,cebolla pequeña,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,8,brócoli,11,ramitas,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,9,ajo,1.5,cucharaditas,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,10,aceite vegetal,8,cucharadas,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,11,"pimienta, comino, vinagre",,al gusto,,,23-24
+TUM_REC_0006,Tumbes,Corazón con zarandaja a la jardinera,12,sal yodada,,con moderación,,,23-24
+TUM_REC_0006,Tumbes,Refresco de maíz morado,1,maíz morado,2,unidades,,,23-24
+TUM_REC_0006,Tumbes,Refresco de maíz morado,2,azúcar,8,cucharaditas,,,23-24
+TUM_REC_0006,Tumbes,Refresco de maíz morado,3,limón,1,unidad,,,23-24
+TUM_REC_0006,Tumbes,Refresco de maíz morado,4,agua,1,litro,,,23-24
+TUM_REC_0006,Tumbes,Fruta,1,mandarina,4,mandarinas medianas,,,23-24
+TUM_REC_0007,Tumbes,Ensalada de palta,1,cebolla,1,cebolla mediana,,,25-26
+TUM_REC_0007,Tumbes,Ensalada de palta,2,palta,1,palta mediana,,,25-26
+TUM_REC_0007,Tumbes,Ensalada de palta,3,limón,1,unidad,,,25-26
+TUM_REC_0007,Tumbes,Ensalada de palta,4,sal yodada,,con moderación,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,1,arroz,1.25,tazas,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,2,papa,0.5,kg,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,3,pota,400,g,400,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,4,zanahoria,1,zanahoria mediana,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,5,tomate,1,tomate mediano,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,6,cebolla,1,cebolla mediana,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,7,arveja fresca,0.25,taza,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,8,ajo,2,cucharaditas,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,9,aceite vegetal,10,cucharadas,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,10,ají colorado molido,1,cucharada,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,11,ají amarillo molido,1,cucharada,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,12,laurel,2,hoja,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,13,sal yodada,,con moderación,,,25-26
+TUM_REC_0007,Tumbes,Pota a la italiana,14,pimienta y comino,,al gusto,,,25-26
+TUM_REC_0007,Tumbes,Refresco de limón,1,limón,2,limones,,,25-26
+TUM_REC_0007,Tumbes,Refresco de limón,2,azúcar,8,cucharaditas,,,25-26
+TUM_REC_0007,Tumbes,Refresco de limón,3,agua hervida fría,1,litro,,,25-26
+TUM_REC_0007,Tumbes,Fruta,1,uva,4,porciones (10 unidades por porción),,,25-26
+TUM_REC_0008,Tumbes,Ensalada de colores,1,tomate,1,tomate mediano,,,27-28
+TUM_REC_0008,Tumbes,Ensalada de colores,2,cebolla,1,cebolla chica,,,27-28
+TUM_REC_0008,Tumbes,Ensalada de colores,3,zanahoria,1,zanahoria mediana,,,27-28
+TUM_REC_0008,Tumbes,Ensalada de colores,4,caigua,1,caigua mediana,,,27-28
+TUM_REC_0008,Tumbes,Ensalada de colores,5,lechuga,8,hojas,,,27-28
+TUM_REC_0008,Tumbes,Ensalada de colores,6,sal yodada,,con moderación,,,27-28
+TUM_REC_0008,Tumbes,Pescado saltado con pallar,1,arroz,1.25,tazas,,,27-28
+TUM_REC_0008,Tumbes,Pescado saltado con pallar,2,pallar,1,taza,,,27-28
+TUM_REC_0008,Tumbes,Pescado saltado con pallar,3,pescado,4,filetes de 50 g c/u,,,27-28
+TUM_REC_0008,Tumbes,Pescado saltado con pallar,4,cebolla,1,cebolla mediana,,,27-28
+TUM_REC_0008,Tumbes,Pescado saltado con pallar,5,tomate,0.5,tomate mediano,,,27-28
+TUM_REC_0008,Tumbes,Pescado saltado con pallar,6,ají amarillo,0.5,ají amarillo mediano,,,27-28
+TUM_REC_0008,Tumbes,Pescado saltado con pallar,7,aceite vegetal,10,cucharadas,,,27-28
+TUM_REC_0008,Tumbes,Pescado saltado con pallar,8,ajo,2,cucharaditas,,,27-28
+TUM_REC_0008,Tumbes,Pescado saltado con pallar,9,sal yodada,,con moderación,,,27-28
+TUM_REC_0008,Tumbes,Pescado saltado con pallar,10,pimienta y comino,,al gusto,,,27-28
+TUM_REC_0008,Tumbes,Refresco de manzana,1,manzana,2,manzanas de agua,,,27-28
+TUM_REC_0008,Tumbes,Refresco de manzana,2,azúcar,8,cucharaditas,,,27-28
+TUM_REC_0008,Tumbes,Refresco de manzana,3,agua,1,litro,,,27-28
+TUM_REC_0008,Tumbes,Fruta,1,piña,4,rodajas delgadas,,,27-28
+TUM_REC_0009,Tumbes,"Ensalada de Lechuga, pepinillo y tomate",1,tomate,1,tomate mediano,,,29-30
+TUM_REC_0009,Tumbes,"Ensalada de Lechuga, pepinillo y tomate",2,pepinillo,0.5,pepinillo mediano,,,29-30
+TUM_REC_0009,Tumbes,"Ensalada de Lechuga, pepinillo y tomate",3,lechuga,8,hojas,,,29-30
+TUM_REC_0009,Tumbes,"Ensalada de Lechuga, pepinillo y tomate",4,limón,1,unidad,,,29-30
+TUM_REC_0009,Tumbes,"Ensalada de Lechuga, pepinillo y tomate",5,sal yodada,,con moderación,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,1,arroz,1.25,tazas,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,2,yuca,0.5,kg,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,3,pescado caballa,4,filetes de 100 g c/u,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,4,cebolla,1,cebolla grande,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,5,ají colorado molido,1,cucharada,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,6,tomate,1,tomate mediano,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,7,pimiento,0.5,pimiento pequeño,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,8,ajo,3,cucharaditas,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,9,culantro,4,ramitas,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,10,aceite vegetal,4,cucharadas,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,11,chicha de jora,,al gusto,,,29-30
+TUM_REC_0009,Tumbes,Sudado de caballa,12,sal yodada,,con moderación,,,29-30
+TUM_REC_0009,Tumbes,Refresco de naranja,1,naranja,2,naranjas de jugo,,,29-30
+TUM_REC_0009,Tumbes,Refresco de naranja,2,azúcar,8,cucharaditas,,,29-30
+TUM_REC_0009,Tumbes,Refresco de naranja,3,agua hervida fría,1,litro,,,29-30
+TUM_REC_0009,Tumbes,Fruta,1,uva,4,porciones (10 unidades por porción),,,29-30
+TUM_REC_0010,Tumbes,Ensalada de palta,1,tomate,1,tomate mediano,,,31-32
+TUM_REC_0010,Tumbes,Ensalada de palta,2,cebolla,1,cebolla pequeña,,,31-32
+TUM_REC_0010,Tumbes,Ensalada de palta,3,palta,1,palta pequeña,,,31-32
+TUM_REC_0010,Tumbes,Ensalada de palta,4,limón,1,unidad,,,31-32
+TUM_REC_0010,Tumbes,Ensalada de palta,5,sal yodada,,con moderación,,,31-32
+TUM_REC_0010,Tumbes,Cachema frita con patacones,1,arroz,1.25,tazas,,,31-32
+TUM_REC_0010,Tumbes,Cachema frita con patacones,2,plátano bellaco,4,plátanos bellaco pequeños,,,31-32
+TUM_REC_0010,Tumbes,Cachema frita con patacones,3,pescado cachema,4,filetes de 100 g c/u,,,31-32
+TUM_REC_0010,Tumbes,Cachema frita con patacones,4,harina de trigo,2,cucharadas,,,31-32
+TUM_REC_0010,Tumbes,Cachema frita con patacones,5,huevo,1,unidad,,,31-32
+TUM_REC_0010,Tumbes,Cachema frita con patacones,6,aceite vegetal,12.5,cucharadas,,,31-32
+TUM_REC_0010,Tumbes,Cachema frita con patacones,7,ajo,1.5,cucharaditas,,,31-32
+TUM_REC_0010,Tumbes,Cachema frita con patacones,8,pimienta,,al gusto,,,31-32
+TUM_REC_0010,Tumbes,Cachema frita con patacones,9,sal yodada,,con moderación,,,31-32
+TUM_REC_0010,Tumbes,Refresco de maracuyá,1,maracuyá,1,unidad,,,31-32
+TUM_REC_0010,Tumbes,Refresco de maracuyá,2,azúcar,8,cucharaditas,,,31-32
+TUM_REC_0010,Tumbes,Refresco de maracuyá,3,agua hervida fría,1,litro,,,31-32
+TUM_REC_0010,Tumbes,Fruta,1,papaya,4,tajadas medianas picadas,,,31-32
+TUM_REC_0011,Tumbes,Ensalada de tomate y lechuga,1,tomate,2,tomates medianos,,,33-34
+TUM_REC_0011,Tumbes,Ensalada de tomate y lechuga,2,lechuga,8,hojas,,,33-34
+TUM_REC_0011,Tumbes,Ensalada de tomate y lechuga,3,aceituna,8,unidad,,,33-34
+TUM_REC_0011,Tumbes,Ensalada de tomate y lechuga,4,limón,1,unidad,,,33-34
+TUM_REC_0011,Tumbes,Ensalada de tomate y lechuga,5,sal yodada,,con moderación,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,1,arroz,1.5,tazas,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,2,pescado caballa,4,filetes de 100 g c/u,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,3,arveja fresca,0.16666666666666666,taza,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,4,huevo,1,unidad,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,5,aceite vegetal,8,cucharadas,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,6,cebolla,1,cebolla mediana,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,7,brócoli,10,ramas,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,8,espinaca,8,hojas,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,9,ajo,1.5,cucharaditas,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,10,sal yodada,,con moderación,,,33-34
+TUM_REC_0011,Tumbes,Tortilla de caballa,11,pimienta,,al gusto,,,33-34
+TUM_REC_0011,Tumbes,Refresco de linaza con canela,1,canela,2,rajas,,,33-34
+TUM_REC_0011,Tumbes,Refresco de linaza con canela,2,linaza,0.25,taza,,,33-34
+TUM_REC_0011,Tumbes,Refresco de linaza con canela,3,azúcar,8,cucharaditas,,,33-34
+TUM_REC_0011,Tumbes,Refresco de linaza con canela,4,agua,1,litro,,,33-34
+TUM_REC_0011,Tumbes,Fruta,1,manzana,4,manzanas medianas,,,33-34
+TUM_REC_0012,Tumbes,Ensalada criolla,1,tomate,2,tomates medianos,,,35-36
+TUM_REC_0012,Tumbes,Ensalada criolla,2,cebolla,1,cebolla pequeña,,,35-36
+TUM_REC_0012,Tumbes,Ensalada criolla,3,aceite vegetal,2,cucharadas,,,35-36
+TUM_REC_0012,Tumbes,Ensalada criolla,4,limón,2,limones,,,35-36
+TUM_REC_0012,Tumbes,Ensalada criolla,5,sal yodada,,,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,1,pescado toyo,4,filetes de 50 g c/u,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,2,arroz,1.25,tazas,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,3,frijol zarandaja,1,taza,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,4,aceite vegetal,11,cucharadas,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,5,cebolla,1,cebolla mediana,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,6,tomate,1,tomate pequeño,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,7,ajo,3,cucharaditas,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,8,culantro,1,cucharada picada,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,9,limón,1,unidad,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,10,maíz cancha,0.16666666666666666,taza,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,11,sal yodada,,con moderación,,,35-36
+TUM_REC_0012,Tumbes,Guiso y cebiche de toyo,12,"pimienta, achiote",,al gusto,,,35-36
+TUM_REC_0012,Tumbes,Refresco de carambola,1,carambola,1,unidad,,,35-36
+TUM_REC_0012,Tumbes,Refresco de carambola,2,azúcar,8,cucharaditas,,,35-36
+TUM_REC_0012,Tumbes,Refresco de carambola,3,agua,1,litro,,,35-36
+TUM_REC_0012,Tumbes,Fruta,1,plátano de seda,4,plátanos medianos,,,35-36
+TUM_REC_0013,Tumbes,Ensalada de col,1,pepinillo,0.3333333333333333,,,,37-38
+TUM_REC_0013,Tumbes,Ensalada de col,2,espinaca,4,hojas picada,,,37-38
+TUM_REC_0013,Tumbes,Ensalada de col,3,tomate,1,tomate pequeño,,,37-38
+TUM_REC_0013,Tumbes,Ensalada de col,4,limón,1,unidad,,,37-38
+TUM_REC_0013,Tumbes,Ensalada de col,5,sal yodada,,con moderación,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,1,arroz,1.25,tazas,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,2,papa,1,papa (125 g),,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,3,pescado,4,filetes de 100 g c/u,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,4,harina de trigo,2,cucharadas,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,5,zapallo macre,400,g,400,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,6,aceite vegetal,7,cucharadas,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,7,cebolla,1,cebolla mediana,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,8,ajo,3,cucharaditas,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,9,ají amarillo fresco,1.5,cucharadas,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,10,arveja fresca,0.25,taza,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,11,choclo,0.5,taza,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,12,queso,4,tajadas,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,13,pimienta,,al gusto,,,37-38
+TUM_REC_0013,Tumbes,Locro con pescado,14,sal yodada,,con moderación,,,37-38
+TUM_REC_0013,Tumbes,Refresco de limón,1,limón,2,limones,,,37-38
+TUM_REC_0013,Tumbes,Refresco de limón,2,azúcar,8,cucharaditas,,,37-38
+TUM_REC_0013,Tumbes,Refresco de limón,3,agua hervida fría,1,litro,,,37-38
+TUM_REC_0013,Tumbes,Fruta,1,naranja,4,naranjas medianas,,,37-38
+TUM_REC_0014,Tumbes,Ensalada fresca,1,tomate,2,tomates medianos,,,39-40
+TUM_REC_0014,Tumbes,Ensalada fresca,2,cebolla,1,cebolla chica,,,39-40
+TUM_REC_0014,Tumbes,Ensalada fresca,3,zanahoria,1,zanahoria mediana,,,39-40
+TUM_REC_0014,Tumbes,Ensalada fresca,4,lechuga,8,hojas,,,39-40
+TUM_REC_0014,Tumbes,Ensalada fresca,5,limón,1,unidad,,,39-40
+TUM_REC_0014,Tumbes,Ensalada fresca,6,sal yodada,,con moderación,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,1,arroz,1.25,tazas,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,2,pollo,4,filetes de 50 g c/u,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,3,frijol,1,taza,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,4,zanahoria,1,zanahoria mediana,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,5,ajo,3,cucharaditas,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,6,ají colorado,2,cucharadas,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,7,ají amarillo,2,cucharadas,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,8,aceite vegetal,9.5,cucharadas,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,9,vinagre,,al gusto,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,10,pimienta y comino,,al gusto,,,39-40
+TUM_REC_0014,Tumbes,Guiso de pollo con frijol,11,sal yodada,,con moderación,,,39-40
+TUM_REC_0014,Tumbes,Refresco de piña,1,piña,2,tazas picadas,,,39-40
+TUM_REC_0014,Tumbes,Refresco de piña,2,azúcar,8,cucharaditas,,,39-40
+TUM_REC_0014,Tumbes,Refresco de piña,3,agua hervida fría,1,litro,,,39-40
+TUM_REC_0014,Tumbes,Fruta,1,uva,4,porciones Italia (10 unidades por porción),,,39-40
+TUM_REC_0015,Tumbes,Ensalada tricolor,1,espinaca,7,hojas,,,41-42
+TUM_REC_0015,Tumbes,Ensalada tricolor,2,cebolla,1,cebolla chica,,,41-42
+TUM_REC_0015,Tumbes,Ensalada tricolor,3,zanahoria,1,zanahoria mediana,,,41-42
+TUM_REC_0015,Tumbes,Ensalada tricolor,4,limón,1,unidad,,,41-42
+TUM_REC_0015,Tumbes,Ensalada tricolor,5,sal yodada,,con moderación,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,1,arroz,1.25,tazas,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,2,plátano bellaco,4,plátanos bellaco pequeños,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,3,carne de res,4,filetes de 100 g c/u,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,4,huevo,1,unidad,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,5,cebolla,1,cebolla mediana,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,6,ají escabeche,1,cucharada,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,7,ají colorado,2,cucharadas,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,8,aceituna,4,unidad,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,9,pasas,2,cucharadas,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,10,ajo,1.5,cucharaditas,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,11,aceite vegetal,8,cucharadas,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,12,apio,1,tallo,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,13,"achiote, pimienta y comino",,al gusto,,,41-42
+TUM_REC_0015,Tumbes,Bolas de plátano a la tumbesina,14,sal yodada,,con moderación,,,41-42
+TUM_REC_0015,Tumbes,Refresco de manzana,1,manzana,2,manzanas de agua,,,41-42
+TUM_REC_0015,Tumbes,Refresco de manzana,2,azúcar,8,cucharaditas,,,41-42
+TUM_REC_0015,Tumbes,Refresco de manzana,3,agua,1,litro,,,41-42
+TUM_REC_0015,Tumbes,Fruta,1,granadilla,4,granadillas medianas,,,41-42
+TUM_REC_0016,Tumbes,Ensalada de brócoli,1,tomate,1,tomate mediano,,,43-44
+TUM_REC_0016,Tumbes,Ensalada de brócoli,2,lechuga,8,hojas,,,43-44
+TUM_REC_0016,Tumbes,Ensalada de brócoli,3,brócoli,24,ramas,,,43-44
+TUM_REC_0016,Tumbes,Ensalada de brócoli,4,limón,1,unidad,,,43-44
+TUM_REC_0016,Tumbes,Ensalada de brócoli,5,sal yodada,,con moderación,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,1,arroz,1.25,tazas,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,2,camote,0.5,kg,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,3,pescado bonito,4,filetes de 100 g c/u,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,4,cebolla,1,cebolla grande,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,5,zanahoria,1,zanahoria pequeña,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,6,ají amarillo,1.5,cucharada,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,7,ají amarillo,0.5,ají amarillo mediano,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,8,ajo,3,cucharaditas,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,9,aceite vegetal,9,cucharadas,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,10,huevo,1,unidad,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,11,aceituna,4,unidad,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,12,laurel,2,hojas,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,13,vinagre y pimienta,,al gusto,,,43-44
+TUM_REC_0016,Tumbes,Escabeche de bonito,14,sal yodada,,con moderación,,,43-44
+TUM_REC_0016,Tumbes,Refresco de canela,1,canela,2,rajas,,,43-44
+TUM_REC_0016,Tumbes,Refresco de canela,2,azúcar,8,cucharaditas,,,43-44
+TUM_REC_0016,Tumbes,Refresco de canela,3,agua,1,litro,,,43-44
+TUM_REC_0016,Tumbes,Fruta,1,granadilla,4,granadillas medianas,,,43-44
+TUM_REC_0017,Tumbes,Ensalada criolla,1,tomate,1,tomate mediano,,,45-46
+TUM_REC_0017,Tumbes,Ensalada criolla,2,cebolla,1,cebolla pequeña,,,45-46
+TUM_REC_0017,Tumbes,Ensalada criolla,3,brócoli,12,ramas,,,45-46
+TUM_REC_0017,Tumbes,Ensalada criolla,4,ají amarillo,0.25,ají amarillo pequeño,,,45-46
+TUM_REC_0017,Tumbes,Ensalada criolla,5,culantro,8,hojitas,,,45-46
+TUM_REC_0017,Tumbes,Ensalada criolla,6,lechuga,4,hojas,,,45-46
+TUM_REC_0017,Tumbes,Ensalada criolla,7,aceite vegetal,1.5,cucharadas,,,45-46
+TUM_REC_0017,Tumbes,Ensalada criolla,8,limón,1,unidad,,,45-46
+TUM_REC_0017,Tumbes,Ensalada criolla,9,sal yodada,,,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,1,arroz,1.25,tazas,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,2,frijol,1,taza,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,3,carne de res,4,filetes de 50 g c/u,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,4,ají colorado,1.5,cucharada,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,5,ají amarillo,1,cucharada,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,6,ají amarillo panca,1,cucharada,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,7,culantro,2,cucharadas,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,8,cebolla,1,cebolla grande,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,9,zapallo loche,1,tajada mediana,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,10,ajo,3,cucharaditas,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,11,aceite vegetal,9,cucharadas,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,12,sal yodada,,con moderación,,,45-46
+TUM_REC_0017,Tumbes,Seco de res con frijol,13,"chicha de jora, pimienta y comino",,al gusto,,,45-46
+TUM_REC_0017,Tumbes,Refresco de piña,1,piña,2,tazas picadas,,,45-46
+TUM_REC_0017,Tumbes,Refresco de piña,2,azúcar,8,cucharaditas,,,45-46
+TUM_REC_0017,Tumbes,Refresco de piña,3,agua hervida fría,1,litro,,,45-46
+TUM_REC_0017,Tumbes,Fruta,1,mandarina,4,mandarinas medianas,,,45-46
+TUM_REC_0018,Tumbes,Ensalada de Lechuga,1,pepinillo,0.6666666666666666,pepinillo mediano,,,47-48
+TUM_REC_0018,Tumbes,Ensalada de Lechuga,2,lechuga,8,hojas,,,47-48
+TUM_REC_0018,Tumbes,Ensalada de Lechuga,3,pimiento,1,pimiento pequeño,,,47-48
+TUM_REC_0018,Tumbes,Ensalada de Lechuga,4,limón,1,unidad,,,47-48
+TUM_REC_0018,Tumbes,Ensalada de Lechuga,5,sal yodada,,con moderación,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,1,arroz,1.25,tazas,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,2,papa,0.25,kg,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,3,pescado bonito,4,filetes de 100 g c/u,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,4,huevo,1,unidad,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,5,ají amarillo fresco,2,unidades,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,6,queso,1,tajada,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,7,aceituna,4,unidad,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,8,leche evaporada,0.25,taza,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,9,galleta de soda,6,unidades,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,10,ajo,2,cucharaditas,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,11,aceite vegetal,8,cucharadas,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,12,pimienta,,al gusto,,,47-48
+TUM_REC_0018,Tumbes,Filete de bonito con salsa a la huancaína,13,sal yodada,,con moderación,,,47-48
+TUM_REC_0018,Tumbes,Refresco de mandarina,1,mandarina,2,unidades,,,47-48
+TUM_REC_0018,Tumbes,Refresco de mandarina,2,azúcar,8,cucharaditas,,,47-48
+TUM_REC_0018,Tumbes,Refresco de mandarina,3,agua hervida fría,1,litro,,,47-48
+TUM_REC_0018,Tumbes,Fruta,1,manzana,4,manzanas medianas,,,47-48
+TUM_REC_0019,Tumbes,Ensalada de tomate y espinaca,1,tomate,2,tomates pequeños,,,49-50
+TUM_REC_0019,Tumbes,Ensalada de tomate y espinaca,2,espinaca,4,hojas,,,49-50
+TUM_REC_0019,Tumbes,Ensalada de tomate y espinaca,3,limón,1,unidad,,,49-50
+TUM_REC_0019,Tumbes,Ensalada de tomate y espinaca,4,sal yodada,,con moderación,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,1,arroz,1.25,tazas,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,2,pallar,1,taza,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,3,hígado de res,4,filetes de 50 g c/u,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,4,cebolla,1,cebolla mediana,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,5,tomate,1,tomate mediano,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,6,ají colorado,1.5,cucharadas,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,7,perejil,4,ramitas,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,8,leche evaporada,5,cucharadas,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,9,ajo,3,cucharaditas,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,10,aceite vegetal,10,cucharadas,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,11,"vinagre, pimienta y comino",,al gusto,,,49-50
+TUM_REC_0019,Tumbes,Hígado encebollado con pallar batido,12,sillao y sal yodada,,con moderación,,,49-50
+TUM_REC_0019,Tumbes,Refresco de cebada,1,cebada tostada,0.5,taza,,,49-50
+TUM_REC_0019,Tumbes,Refresco de cebada,2,azúcar,8,cucharaditas,,,49-50
+TUM_REC_0019,Tumbes,Refresco de cebada,3,agua,1,litro,,,49-50
+TUM_REC_0019,Tumbes,Fruta,1,piña,4,rodajas delgadas,,,49-50
+TUM_REC_0020,Tumbes,Ensalada de choclo,1,choclo,0.5,unidad,,,51-52
+TUM_REC_0020,Tumbes,Ensalada de choclo,2,zanahoria,0.25,taza,,,51-52
+TUM_REC_0020,Tumbes,Ensalada de choclo,3,lechuga,4,hojas,,,51-52
+TUM_REC_0020,Tumbes,Ensalada de choclo,4,arveja fresca,0.25,taza,,,51-52
+TUM_REC_0020,Tumbes,Ensalada de choclo,5,pimiento,0.25,pimiento pequeño,,,51-52
+TUM_REC_0020,Tumbes,Ensalada de choclo,6,vainita,12,unidad,,,51-52
+TUM_REC_0020,Tumbes,Ensalada de choclo,7,aceite vegetal,2,cucharadas,,,51-52
+TUM_REC_0020,Tumbes,Ensalada de choclo,8,limón,1,unidad,,,51-52
+TUM_REC_0020,Tumbes,Ensalada de choclo,9,sal yodada,,con moderación,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,1,arroz,1.25,tazas,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,2,papa,0.5,kg,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,3,pescado toyo,4,filetes de 100 g c/u,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,4,cebolla,0.5,cebolla mediana,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,5,arveja fresca,0.25,taza,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,6,zanahoria,0.5,zanahoria pequeña,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,7,ají amarillo molido,2,cucharadas,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,8,ajo,2,cucharaditas,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,9,aceite vegetal,9,cucharadas,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,10,culantro,2,ramitas,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,11,sal yodada,,con moderación,,,51-52
+TUM_REC_0020,Tumbes,Cau cau de toyo,12,palillo y pimienta,,al gusto,,,51-52
+TUM_REC_0020,Tumbes,Refresco de carambola,1,carambola,1,unidad,,,51-52
+TUM_REC_0020,Tumbes,Refresco de carambola,2,azúcar,8,cucharaditas,,,51-52
+TUM_REC_0020,Tumbes,Refresco de carambola,3,agua hervida fría,1,litro,,,51-52
+TUM_REC_0020,Tumbes,Fruta,1,uva,4,porciones (10 unidades por porción),,,51-52
+TUM_REC_0021,Tumbes,Ensalada de tomate,1,tomate,2,tomates pequeños,,,53-54
+TUM_REC_0021,Tumbes,Ensalada de tomate,2,zanahoria,1,zanahoria mediana,,,53-54
+TUM_REC_0021,Tumbes,Ensalada de tomate,3,vainita,1,taza picada,,,53-54
+TUM_REC_0021,Tumbes,Ensalada de tomate,4,aceite vegetal,2,cucharadas,,,53-54
+TUM_REC_0021,Tumbes,Ensalada de tomate,5,limón,1,unidad,,,53-54
+TUM_REC_0021,Tumbes,Ensalada de tomate,6,sal yodada,,con moderación,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,1,arroz,1.25,tazas,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,2,plátano bellaco,4,plátanos bellaco medianos,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,3,pescado bonito,4,filetes de 100 g c/u,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,4,tomate,1,tomate pequeño,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,5,pimiento,0.25,pimiento pequeño,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,6,ají amarillo molido,1,cucharada,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,7,cebolla,0.5,cebolla pequeña,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,8,ajo,1.5,cucharaditas,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,9,aceite vegetal,8,cucharadas,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,10,culantro,2,ramitas,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,11,maní,3,cucharadas,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,12,achiote y pimienta,,al gusto,,,53-54
+TUM_REC_0021,Tumbes,Sanguito de plátano con pescado,13,sal yodada,,con moderación,,,53-54
+TUM_REC_0021,Tumbes,Refresco de linaza con canela,1,canela,2,rajas,,,53-54
+TUM_REC_0021,Tumbes,Refresco de linaza con canela,2,linaza,0.25,taza,,,53-54
+TUM_REC_0021,Tumbes,Refresco de linaza con canela,3,azúcar,8,cucharaditas,,,53-54
+TUM_REC_0021,Tumbes,Refresco de linaza con canela,4,agua,1,litro,,,53-54
+TUM_REC_0021,Tumbes,Fruta,1,plátano de seda,4,plátanos medianos,,,53-54
+TUM_REC_0022,Tumbes,Ensalada de choclo y haba con queso,1,haba fresca,0.25,taza,,,55-56
+TUM_REC_0022,Tumbes,Ensalada de choclo y haba con queso,2,choclo,0.5,unidad,,,55-56
+TUM_REC_0022,Tumbes,Ensalada de choclo y haba con queso,3,queso,4,tajadas,,,55-56
+TUM_REC_0022,Tumbes,Ensalada de choclo y haba con queso,4,cebolla,1,cebolla pequeña,,,55-56
+TUM_REC_0022,Tumbes,Ensalada de choclo y haba con queso,5,tomate,1,tomate pequeño,,,55-56
+TUM_REC_0022,Tumbes,Ensalada de choclo y haba con queso,6,sal yodada,,con moderación,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,1,arroz,1.25,tazas,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,2,plátano bellaco,4,plátanos bellaco medianos,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,3,hígado de res,200,g,200,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,4,bofe de res,200,g,200,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,5,tomate,1,tomate mediano,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,6,pimiento,0.25,pimiento mediano,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,7,cebolla,1,cebolla mediana,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,8,ají amarillo,2,cucharadas,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,9,ajo,3,cucharaditas,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,10,aceite vegetal,9,cucharadas,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,11,culantro,2,ramitas,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,12,perejil y hierba buena,1,ramita,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,13,"achiote, pimienta y comino",,al gusto,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,14,sal yodada,,con moderación,,,55-56
+TUM_REC_0022,Tumbes,Mixtura tumbesina,15,pimienta y comino,,al gusto,,,55-56
+TUM_REC_0022,Tumbes,Refresco de limón,1,limón,2,limones,,,55-56
+TUM_REC_0022,Tumbes,Refresco de limón,2,azúcar,8,cucharaditas,,,55-56
+TUM_REC_0022,Tumbes,Refresco de limón,3,agua hervida fría,1,litro,,,55-56
+TUM_REC_0022,Tumbes,Fruta,1,granadilla,4,granadillas medianas,,,55-56
+TUM_REC_0023,Tumbes,Ensalada criolla,1,tomate,2,tomates pequeños,,,57-58
+TUM_REC_0023,Tumbes,Ensalada criolla,2,cebolla,1,cebolla pequeña,,,57-58
+TUM_REC_0023,Tumbes,Ensalada criolla,3,culantro,8,hojitas,,,57-58
+TUM_REC_0023,Tumbes,Ensalada criolla,4,aceite vegetal,2,cucharadas,,,57-58
+TUM_REC_0023,Tumbes,Ensalada criolla,5,limón,1,unidad,,,57-58
+TUM_REC_0023,Tumbes,Ensalada criolla,6,sal yodada,,,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,1,arroz,1.5,tazas,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,2,pota,0.5,taza,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,3,caracol,0.3333333333333333,taza,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,4,langostino,0.3333333333333333,taza,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,5,pulpo,0.3333333333333333,taza,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,6,choros,4,unidad,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,7,pescado bonito,4,filetes de 50 g c/u,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,8,pimiento,0.25,pimiento pequeño,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,9,cebolla,1,cebolla mediana,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,10,arveja fresca,0.16666666666666666,taza,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,11,zanahoria,0.16666666666666666,taza,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,12,ajo,3,cucharaditas,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,13,aceite vegetal,8,cucharadas,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,14,limón,2,limones,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,15,chicha de jora y culantro,,al gusto,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,16,"achiote, pimienta, chifle y ají",,al gusto,,,57-58
+TUM_REC_0023,Tumbes,Arroz con mariscos y cebiche de pescado,17,sal yodada,,con moderación,,,57-58
+TUM_REC_0023,Tumbes,Refresco de maíz morado,1,maíz morado,2,unidades,,,57-58
+TUM_REC_0023,Tumbes,Refresco de maíz morado,2,azúcar,8,cucharaditas,,,57-58
+TUM_REC_0023,Tumbes,Refresco de maíz morado,3,limón,1,unidad,,,57-58
+TUM_REC_0023,Tumbes,Fruta,1,papaya,4,tajadas delgadas picadas,,,57-58
+TUM_REC_0024,Tumbes,Ensalada de verduras frescas,1,tomate,2,tomates pequeños,,,59-60
+TUM_REC_0024,Tumbes,Ensalada de verduras frescas,2,lechuga,12,hojas,,,59-60
+TUM_REC_0024,Tumbes,Ensalada de verduras frescas,3,limón,2,limones,,,59-60
+TUM_REC_0024,Tumbes,Ensalada de verduras frescas,4,sal yodada,,con moderación,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,1,maíz cancha tostada,0.3333333333333333,taza,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,2,frijol zarandaja,0.3333333333333333,taza,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,3,plátano verde,4,plátanos verde medianos,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,4,pota,0.5,taza,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,5,caracol,0.3333333333333333,taza,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,6,machas,0.3333333333333333,taza,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,7,pulpo,0.3333333333333333,taza,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,8,choros,0.3333333333333333,taza,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,9,pimiento,0.25,pimiento rojo pequeño,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,10,cebolla,1,cebolla mediana,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,11,ají amarillo molido,2,cucharadas,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,12,ajo,3,cucharaditas,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,13,aceite vegetal,9.5,cucharadas,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,14,chicha de jora y pimienta,,al gusto,,,59-60
+TUM_REC_0024,Tumbes,Majarisco tumbesino,15,sal yodada,,con moderación,,,59-60
+TUM_REC_0024,Tumbes,Refresco de tamarindo,1,tamarindo,0.5,taza,,,59-60
+TUM_REC_0024,Tumbes,Refresco de tamarindo,2,azúcar,8,cucharaditas,,,59-60
+TUM_REC_0024,Tumbes,Refresco de tamarindo,3,agua,1,litro,,,59-60
+TUM_REC_0024,Tumbes,Fruta,1,melón,4,tajadas delgadas y picadas,,,59-60
+TUM_REC_0025,Tumbes,Ensalada verde,1,lechuga,10,hojas,,,61-62
+TUM_REC_0025,Tumbes,Ensalada verde,2,pepinillo,0.5,pepinillo mediano,,,61-62
+TUM_REC_0025,Tumbes,Ensalada verde,3,culantro,4,ramas,,,61-62
+TUM_REC_0025,Tumbes,Ensalada verde,4,limón,1,unidad,,,61-62
+TUM_REC_0025,Tumbes,Ensalada verde,5,sal yodada,,con moderación,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,1,arroz,1.25,tazas,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,2,sangre de pollo,400,g,400,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,3,papa blanca,0.5,kg,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,4,ají amarillo molido,1,cucharada,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,5,arveja fresca,0.25,taza,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,6,zanahoria,1,zanahoria pequeña,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,7,huevo de gallina,1,unidad,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,8,aceituna,4,unidad,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,9,ajo,2.5,cucharaditas,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,10,mayonesa,4,cucharadas,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,11,palta,0.5,palta mediana,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,12,aceite vegetal,2.5,cucharadas,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,13,limón,2,limones,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,14,pimienta,,al gusto,,,61-62
+TUM_REC_0025,Tumbes,Causa de sangrecita,15,sal yodada,,con moderación,,,61-62
+TUM_REC_0025,Tumbes,Refresco de manzana,1,manzana,2,manzanas de agua,,,61-62
+TUM_REC_0025,Tumbes,Refresco de manzana,2,azúcar,8,cucharaditas,,,61-62
+TUM_REC_0025,Tumbes,Refresco de manzana,3,agua,1,litro,,,61-62
+TUM_REC_0025,Tumbes,Fruta,1,uva,4,porciones (10 unidades por porción),,,61-62

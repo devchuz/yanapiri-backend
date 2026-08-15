@@ -1,0 +1,103 @@
+department,variable,value,unit,description,source_page
+Tumbes,familia_tipo_n_miembros,4,miembros,Número de miembros de la familia tipo considerada para los cálculos dietéticos del recetario,6
+Tumbes,familia_tipo_composicion,"Padre y madre de 18 a 29 años, hija de 10 años, hijo de 5 años",,Composición etaria/de sexo de la familia tipo,6
+Tumbes,familia_tipo_area_residencia,"Área urbana; estratos socioeconómicos medio, medio bajo y bajo",,Área de residencia y estrato socioeconómico de la familia tipo considerada,6
+Tumbes,aspecto_nutricional_considerado,"Población con desequilibrio calórico, proteico, carbohidratos disponibles, grasas y déficit de hierro, zinc y vitamina A",,Aspecto nutricional considerado para el diseño de las recetas,6
+Tumbes,madre_edad_anios,18-29,años,Edad de referencia del miembro 'madre' de la familia tipo,6
+Tumbes,madre_talla_mediana_m,1.54,m,Talla mediana del miembro 'madre' de la familia tipo,6
+Tumbes,madre_peso_mediana_kg,52,kg,Peso mediana del miembro 'madre' de la familia tipo,6
+Tumbes,madre_tmb_kcal,1257,kcal,Tasa metabólica basal (TMB) del miembro 'madre',6
+Tumbes,madre_naf,1.55,,Nivel de actividad física (NAF) del miembro 'madre',6
+Tumbes,madre_energia_kcal,2003,kcal,Requerimiento de energía diario del miembro 'madre',6
+Tumbes,madre_proteinas_10pct_g,50.1,g,Requerimiento de proteínas diario del miembro 'madre' al 10% del valor calórico total,6
+Tumbes,madre_proteinas_15pct_g,75.1,g,Requerimiento de proteínas diario del miembro 'madre' al 15% del valor calórico total,6
+Tumbes,madre_vitaminaA_ug,700,ug,Requerimiento de vitamina A diario del miembro 'madre',6
+Tumbes,madre_hierro_mg,29.4,mg,Requerimiento de hierro diario del miembro 'madre',6
+Tumbes,madre_zinc_mg,4.9,mg,Requerimiento de zinc diario del miembro 'madre',6
+Tumbes,padre_edad_anios,18-29,años,Edad de referencia del miembro 'padre' de la familia tipo,6
+Tumbes,padre_talla_mediana_m,1.66,m,Talla mediana del miembro 'padre' de la familia tipo,6
+Tumbes,padre_peso_mediana_kg,60.6,kg,Peso mediana del miembro 'padre' de la familia tipo,6
+Tumbes,padre_tmb_kcal,1605,kcal,Tasa metabólica basal (TMB) del miembro 'padre',6
+Tumbes,padre_naf,1.55,,Nivel de actividad física (NAF) del miembro 'padre',6
+Tumbes,padre_energia_kcal,2620,kcal,Requerimiento de energía diario del miembro 'padre',6
+Tumbes,padre_proteinas_10pct_g,65.5,g,Requerimiento de proteínas diario del miembro 'padre' al 10% del valor calórico total,6
+Tumbes,padre_proteinas_15pct_g,98.3,g,Requerimiento de proteínas diario del miembro 'padre' al 15% del valor calórico total,6
+Tumbes,padre_vitaminaA_ug,900,ug,Requerimiento de vitamina A diario del miembro 'padre',6
+Tumbes,padre_hierro_mg,13.7,mg,Requerimiento de hierro diario del miembro 'padre',6
+Tumbes,padre_zinc_mg,7,mg,Requerimiento de zinc diario del miembro 'padre',6
+Tumbes,hija_edad_anios,10,años,Edad de referencia del miembro 'hija' de la familia tipo,6
+Tumbes,hija_talla_mediana_m,1.42,m,Talla mediana del miembro 'hija' de la familia tipo,6
+Tumbes,hija_peso_mediana_kg,34,kg,Peso mediana del miembro 'hija' de la familia tipo,6
+Tumbes,hija_tmb_kcal,,kcal,Tasa metabólica basal (TMB) del miembro 'hija',6
+Tumbes,hija_naf,,,Nivel de actividad física (NAF) del miembro 'hija',6
+Tumbes,hija_energia_kcal,1689,kcal,Requerimiento de energía diario del miembro 'hija',6
+Tumbes,hija_proteinas_10pct_g,42.2,g,Requerimiento de proteínas diario del miembro 'hija' al 10% del valor calórico total,6
+Tumbes,hija_proteinas_15pct_g,63.3,g,Requerimiento de proteínas diario del miembro 'hija' al 15% del valor calórico total,6
+Tumbes,hija_vitaminaA_ug,600,ug,Requerimiento de vitamina A diario del miembro 'hija',6
+Tumbes,hija_hierro_mg,8.9,mg,Requerimiento de hierro diario del miembro 'hija',6
+Tumbes,hija_zinc_mg,7.2,mg,Requerimiento de zinc diario del miembro 'hija',6
+Tumbes,hijo_edad_anios,5,años,Edad de referencia del miembro 'hijo' de la familia tipo,6
+Tumbes,hijo_talla_mediana_m,1.13,m,Talla mediana del miembro 'hijo' de la familia tipo,6
+Tumbes,hijo_peso_mediana_kg,19.5,kg,Peso mediana del miembro 'hijo' de la familia tipo,6
+Tumbes,hijo_tmb_kcal,,kcal,Tasa metabólica basal (TMB) del miembro 'hijo',6
+Tumbes,hijo_naf,,,Nivel de actividad física (NAF) del miembro 'hijo',6
+Tumbes,hijo_energia_kcal,1456,kcal,Requerimiento de energía diario del miembro 'hijo',6
+Tumbes,hijo_proteinas_10pct_g,36.4,g,Requerimiento de proteínas diario del miembro 'hijo' al 10% del valor calórico total,6
+Tumbes,hijo_proteinas_15pct_g,54.6,g,Requerimiento de proteínas diario del miembro 'hijo' al 15% del valor calórico total,6
+Tumbes,hijo_vitaminaA_ug,400,ug,Requerimiento de vitamina A diario del miembro 'hijo',6
+Tumbes,hijo_hierro_mg,6.3,mg,Requerimiento de hierro diario del miembro 'hijo',6
+Tumbes,hijo_zinc_mg,4.8,mg,Requerimiento de zinc diario del miembro 'hijo',6
+Tumbes,requerimiento_familiar_energia_kcal_dia,7768,kcal/día,Requerimiento de energía diario de la familia tipo (4 miembros),6
+Tumbes,requerimiento_familiar_proteinas_10pct_g_dia,194.2,g/día,Requerimiento de proteínas diario de la familia tipo al 10% del VCT,6
+Tumbes,requerimiento_familiar_proteinas_15pct_g_dia,291.3,g/día,Requerimiento de proteínas diario de la familia tipo al 15% del VCT,6
+Tumbes,requerimiento_familiar_vitaminaA_ug_dia,2600,ug/día,Requerimiento de vitamina A diario de la familia tipo,6
+Tumbes,requerimiento_familiar_hierro_mg_dia,58.3,mg/día,Requerimiento de hierro diario de la familia tipo,6
+Tumbes,requerimiento_familiar_zinc_mg_dia,23.9,mg/día,Requerimiento de zinc diario de la familia tipo,6
+Tumbes,requerimiento_persona_energia_kcal_dia,1942,kcal/día,Requerimiento de energía diario por persona,6
+Tumbes,requerimiento_persona_proteinas_10pct_g_dia,48.6,g/día,Requerimiento de proteínas diario por persona al 10% del VCT,6
+Tumbes,requerimiento_persona_proteinas_15pct_g_dia,72.8,g/día,Requerimiento de proteínas diario por persona al 15% del VCT,6
+Tumbes,requerimiento_persona_vitaminaA_ug_dia,650,ug/día,Requerimiento de vitamina A diario por persona,6
+Tumbes,requerimiento_persona_hierro_mg_dia,14.6,mg/día,Requerimiento de hierro diario por persona,6
+Tumbes,requerimiento_persona_zinc_mg_dia,6.0,mg/día,Requerimiento de zinc diario por persona,6
+Tumbes,distribucion_calorica_desayuno_pct,20-25,%,Rango de distribución calórica diaria correspondiente al desayuno,7
+Tumbes,distribucion_calorica_refrigerio_manana_pct,10,%,Rango de distribución calórica diaria correspondiente al refrigerio de la mañana,7
+Tumbes,distribucion_calorica_almuerzo_saludable_pct,40-45,%,Rango de distribución calórica diaria correspondiente al almuerzo saludable,7
+Tumbes,distribucion_calorica_refrigerio_tarde_pct,10,%,Rango de distribución calórica diaria correspondiente al refrigerio de la tarde,7
+Tumbes,distribucion_calorica_cena_pct,20-30,%,Rango de distribución calórica diaria correspondiente a la cena,7
+Tumbes,almuerzo_saludable_requerimiento_persona_dia_kcal,1942,kcal,Requerimiento nutricional por día por persona usado como base para calcular el almuerzo saludable,7
+Tumbes,almuerzo_saludable_minimo_pct,40,%,Porcentaje mínimo del requerimiento calórico diario que aporta el almuerzo saludable,7
+Tumbes,almuerzo_saludable_minimo_kcal,777,kcal,Aporte calórico mínimo del almuerzo saludable para 1 miembro de familia,7
+Tumbes,almuerzo_saludable_maximo_pct,45,%,Porcentaje máximo del requerimiento calórico diario que aporta el almuerzo saludable,7
+Tumbes,almuerzo_saludable_maximo_kcal,874,kcal,Aporte calórico máximo del almuerzo saludable para 1 miembro de familia,7
+Tumbes,almuerzo_saludable_promedio_pct,42.5,%,Porcentaje promedio del requerimiento calórico diario que aporta el almuerzo saludable,7
+Tumbes,almuerzo_saludable_promedio_kcal,825,kcal,Aporte calórico promedio del almuerzo saludable para 1 miembro de familia,7
+Tumbes,componente_plato_principal_kcal_minimo,621,kcal,"Aporte calórico mínimo del componente 'plato_principal' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_plato_principal_kcal_maximo,700,kcal,"Aporte calórico máximo del componente 'plato_principal' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_plato_principal_kcal_promedio,660,kcal,"Aporte calórico promedio del componente 'plato_principal' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_plato_principal_porcion_pct,80,%,Porción porcentual del componente 'plato_principal' respecto al aporte calórico total del almuerzo saludable,8
+Tumbes,componente_ensalada_de_verduras_kcal_minimo,25,kcal,"Aporte calórico mínimo del componente 'ensalada_de_verduras' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_ensalada_de_verduras_kcal_maximo,25,kcal,"Aporte calórico máximo del componente 'ensalada_de_verduras' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_ensalada_de_verduras_kcal_promedio,25,kcal,"Aporte calórico promedio del componente 'ensalada_de_verduras' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_ensalada_de_verduras_porcion_pct,3,%,Porción porcentual del componente 'ensalada_de_verduras' respecto al aporte calórico total del almuerzo saludable,8
+Tumbes,componente_aceite_vegetal_kcal_minimo,36,kcal,"Aporte calórico mínimo del componente 'aceite_vegetal' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_aceite_vegetal_kcal_maximo,55,kcal,"Aporte calórico máximo del componente 'aceite_vegetal' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_aceite_vegetal_kcal_promedio,45,kcal,"Aporte calórico promedio del componente 'aceite_vegetal' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_aceite_vegetal_porcion_pct,7,%,Porción porcentual del componente 'aceite_vegetal' respecto al aporte calórico total del almuerzo saludable,8
+Tumbes,componente_fruta_kcal_minimo,55,kcal,"Aporte calórico mínimo del componente 'fruta' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_fruta_kcal_maximo,55,kcal,"Aporte calórico máximo del componente 'fruta' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_fruta_kcal_promedio,55,kcal,"Aporte calórico promedio del componente 'fruta' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_fruta_porcion_pct,5,%,Porción porcentual del componente 'fruta' respecto al aporte calórico total del almuerzo saludable,8
+Tumbes,componente_refresco_natural_con_azucar_kcal_minimo,40,kcal,"Aporte calórico mínimo del componente 'refresco_natural_con_azucar' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_refresco_natural_con_azucar_kcal_maximo,40,kcal,"Aporte calórico máximo del componente 'refresco_natural_con_azucar' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_refresco_natural_con_azucar_kcal_promedio,40,kcal,"Aporte calórico promedio del componente 'refresco_natural_con_azucar' del almuerzo saludable, para 1 miembro de familia",8
+Tumbes,componente_refresco_natural_con_azucar_porcion_pct,5,%,Porción porcentual del componente 'refresco_natural_con_azucar' respecto al aporte calórico total del almuerzo saludable,8
+Tumbes,aporte_calorico_almuerzo_total_minimo_kcal,777,kcal,Aporte calórico total mínimo del almuerzo saludable (suma de componentes),8
+Tumbes,aporte_calorico_almuerzo_total_maximo_kcal,874,kcal,Aporte calórico total máximo del almuerzo saludable (suma de componentes),8
+Tumbes,aporte_calorico_almuerzo_total_promedio_kcal,825,kcal,Aporte calórico total promedio del almuerzo saludable (suma de componentes),8
+Tumbes,aporte_calorico_almuerzo_total_porcion_pct,100,%,Porción porcentual total del almuerzo saludable,8
+Tumbes,macronutrientes_plato_principal_proteinas_pct,10-15,%,Rango de distribución calórica del plato principal del almuerzo correspondiente a proteínas (Fuente: OMS/FAO 2003),8
+Tumbes,macronutrientes_plato_principal_grasas_pct,15-30,%,Rango de distribución calórica del plato principal del almuerzo correspondiente a grasas (Fuente: OMS/FAO 2003),8
+Tumbes,macronutrientes_plato_principal_carbohidratos_pct,50-60,%,Rango de distribución calórica del plato principal del almuerzo correspondiente a carbohidratos (Fuente: OMS/FAO 2003),8
+Tumbes,recetario_numero_almuerzos,25,almuerzos,Número total de almuerzos familiares saludables incluidos en el recetario,4
+Tumbes,recetario_porciones_por_almuerzo,4,porciones,Cada almuerzo familiar saludable rinde para 4 porciones ('Rinde para 4 almuerzos'),
+Tumbes,recetario_componentes_por_almuerzo,4,componentes,"Cada almuerzo está constituido por 4 preparaciones: ensalada de verduras, plato principal, fruta y refresco natural",5

@@ -2,7 +2,13 @@ from fastapi.testclient import TestClient
 from datetime import date, timedelta
 
 from app.core import db
-from app.main import app
+from app.main import _recortar, app
+
+
+def test_webhook_preview_hides_dni_with_or_without_separators():
+    assert _recortar("12345678") == "[DNI OCULTO]"
+    assert _recortar("1234-5678") == "[DNI OCULTO]"
+    assert "1234 5678" not in _recortar("DNI del niño: 1234 5678")
 
 
 def test_health_and_preview_endpoints():

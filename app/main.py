@@ -22,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from .agent import nutricred_agent
 from .core import clasificador, config, db
 from .domain.anthropometry import AnthropometryError, assess_child
+from .services.food_recommendations import FoodDemoDataError, build_demo
 from .services.whatsapp_ui import Presentation, build_presentation, interactive_payload
 
 _SEM = asyncio.Semaphore(config.MAX_CONCURRENT_MESSAGES)
@@ -44,6 +45,13 @@ _OPENAPI_TAGS = [
         "name": "Antropometría",
         "description": (
             "Vista previa determinista con tablas OMS. No persiste datos ni constituye diagnóstico."
+        ),
+    },
+    {
+        "name": "Alimentación",
+        "description": (
+            "Caso demostrativo trazable con una receta infantil oficial y precios "
+            "mayoristas regionales. No prescribe ni completa equivalencias faltantes."
         ),
     },
     {
@@ -173,7 +181,7 @@ class AssessmentIn(BaseModel):
     weight_kg: float = Field(gt=0, le=100, description="Peso en kilogramos.")
     height_cm: float = Field(ge=10, le=250, description="Longitud o talla en centímetros.")
     height_mode: Literal["length", "height"] = Field(
-        description="`length`: acostado/a; `height`: de pie."
+        description="`length`: menor acostado; `height`: de pie."
     )
     muac_mm: float | None = Field(default=None, ge=10, le=1000, description="MUAC en milímetros.")
     bilateral_edema: bool = Field(default=False, description="Edema observado en ambos pies.")
@@ -324,6 +332,14 @@ def _recortar(text: str, limite: int = 80) -> str:
     guardar la conversación completa.
     """
     plano = " ".join(str(text).split())
+    plano = re.sub(
+        r"(?i)(\bdni[^:]{0,35}:\s*)(?:\d[\s.-]*){7}\d",
+        r"\1[DNI OCULTO]",
+        plano,
+    )
+    if re.fullmatch(r"\s*(?:\d[\s.-]*){7}\d\s*", plano):
+        plano = "[DNI OCULTO]"
+    plano = re.sub(r"(?<!\d)\d{8}(?!\d)", "[DNI OCULTO]", plano)
     return plano if len(plano) <= limite else plano[:limite] + "..."
 
 
@@ -628,6 +644,27 @@ def preview_assessment(payload: AssessmentIn) -> dict:
 
 
 @app.get(
+    "/nutrition/recommendations/demo",
+    tags=["Alimentación"],
+    summary="Ejecutar el caso demostrativo de recomendación alimentaria",
+    description=(
+        "Compara Lima y Tumbes para una receta INS/CENAN compatible con una persona "
+        "ficticia de 7 meses. Usa precios MIDAGRI reales, pero deja el costo en nulo "
+        "cuando faltan cantidades normalizadas o mapeos validados."
+    ),
+    responses={
+        200: {"description": "Caso demostrativo con trazabilidad y controles de calidad."},
+        503: {"description": "No están disponibles los archivos procesados requeridos."},
+    },
+)
+def nutrition_recommendation_demo() -> dict:
+    try:
+        return build_demo()
+    except FoodDemoDataError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@app.get(
     "/clinical/children/{child_id}/history",
     tags=["Profesionales de salud"],
     summary="Consultar historial integral",
@@ -876,7 +913,16 @@ async def kapso_webhook(
             f"[webhook] entra via={route_kind} {_ofuscar(identity)} "
             f"id={message_id or '?'}: {preview}"
         )
-        if not db.registrar_evento_webhook(message_id, event_type or "whatsapp.message.received", event):
+        safe_event_metadata = {
+            "message_id": message_id,
+            "message_type": (event.get("message") or {}).get("type"),
+            "phone_number_id": event.get("phone_number_id"),
+        }
+        if not db.registrar_evento_webhook(
+            message_id,
+            event_type or "whatsapp.message.received",
+            safe_event_metadata,
+        ):
             print(f"[webhook] duplicado, ya procesado (id={message_id or '?'})")
             continue
         if await _enqueue(identity, text):

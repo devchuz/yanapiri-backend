@@ -33,6 +33,7 @@ No escribir `Bearer` dentro del cuadro si Swagger ya muestra ese esquema.
 | `GET` | `/health` | No | Estado de API, Supabase, Groq y Kapso |
 | `POST` | `/chat` | No | Simulación local del bot familiar |
 | `POST` | `/assessments/preview` | No | Cálculo OMS sin persistencia |
+| `GET` | `/nutrition/recommendations/demo` | No | Caso alimentario trazable Lima/Tumbes |
 | `POST` | `/webhooks/kapso` | Firma HMAC | Entrada oficial de eventos WhatsApp |
 | `GET` | `/clinical/children/{child_id}/history` | Bearer | Historial, alertas y citas |
 | `POST` | `/clinical/children/{child_id}/measurements` | Bearer | Nueva medición clínica verificada |
@@ -66,6 +67,18 @@ Las dos series no se promedian, no se sobrescriben y se devuelven separadas como
 `reported_trajectory` y `verified_trajectory`.
 
 ## Ejemplos
+
+### Recomendación alimentaria demostrativa
+
+```bash
+curl http://localhost:7860/nutrition/recommendations/demo
+```
+
+El caso usa una persona ficticia de 7 meses, una receta infantil INS/CENAN y
+precios mayoristas MIDAGRI de Lima y Tumbes. El costo de la receta queda en
+`null` porque las medidas caseras aún no tienen equivalencias documentadas. La
+respuesta muestra precios observados, mapeos pendientes, cobertura y la razón
+por la que el ranking de costo permanece desactivado.
 
 ### Vista previa antropométrica
 

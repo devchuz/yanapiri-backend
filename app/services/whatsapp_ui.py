@@ -115,14 +115,18 @@ def _presentation(
     return Presentation(kind, prompt, options, button_text, section_title, send_text_first=True)
 
 
-def _children_list(body: str, children: list[dict]) -> Presentation | None:
+def _children_list(
+    body: str, children: list[dict], *, include_new_child: bool = False
+) -> Presentation | None:
     if not children:
         return None
     rows = [
-        (str(index), child.get("full_name") or f"Niña o niño {index}", "Seleccionar este registro")
-        for index, child in enumerate(children[:10], 1)
+        (str(index), child.get("full_name") or f"Registro infantil {index}", "Seleccionar este registro")
+        for index, child in enumerate(children[:9] if include_new_child else children[:10], 1)
     ]
-    return _list(body, rows, button_text="Elegir", section_title="Niñas y niños")
+    if include_new_child:
+        rows.append(("nuevo", "Agregar nuevo", "Registrar otra niña o niño"))
+    return _list(body, rows, button_text="Elegir", section_title="Registros infantiles")
 
 
 def _yes_no(body: str) -> Presentation:
@@ -147,7 +151,7 @@ def build_presentation(identity: str, answer: str) -> Presentation | None:
                 ],
             )
         if "Tu registro como persona cuidadora está listo" in answer:
-            return _buttons(answer, [("registrar", "Registrar niño/a"), ("privacidad", "Privacidad")])
+            return _buttons(answer, [("registrar", "Registrar menor"), ("privacidad", "Privacidad")])
         if "Escribe REGISTRAR para comenzar" in answer:
             return _buttons(answer, [("1", "Registrar ahora"), ("4", "Volver al menú")])
         if "Escribe INICIO para volver" in answer:
@@ -182,7 +186,7 @@ def build_presentation(identity: str, answer: str) -> Presentation | None:
         return _list(
             answer,
             [
-                ("1", "Registrar niño/a", "Agregar otro registro infantil"),
+                ("1", "Registrar menor", "Agregar otro registro infantil"),
                 ("2", "Alertas", "Acciones de seguimiento"),
                 ("3", "Suplementos", "Tomas y recordatorios"),
                 ("4", "Establecimiento", "Agregar o cambiar centro"),
@@ -200,7 +204,7 @@ def build_presentation(identity: str, answer: str) -> Presentation | None:
         if step == "caregiver_relationship":
             return _buttons(answer, [("1", "Madre"), ("2", "Padre"), ("3", "Otro cuidador")])
         if step == "sex":
-            return _buttons(answer, [("f", "Niña / femenino"), ("m", "Niño / masculino")])
+            return _buttons(answer, [("f", "Niña (femenino)"), ("m", "Niño (masculino)")])
         if step == "district_confirm":
             return _buttons(answer, [("si", "Sí"), ("no", "Otro distrito")])
         if step == "health_center":
@@ -216,9 +220,13 @@ def build_presentation(identity: str, answer: str) -> Presentation | None:
 
     if flow == "measurement":
         if step == "select_child":
-            return _children_list(answer, data.get("children") or [])
+            return _children_list(
+                answer, data.get("children") or [], include_new_child=True
+            )
         if step == "height_mode":
-            return _buttons(answer, [("acostado", "Acostado/a"), ("parado", "De pie")])
+            sex = str(data.get("sex") or "").upper()
+            lying = "Acostada" if sex == "F" else "Acostado" if sex == "M" else "Longitud acostado"
+            return _buttons(answer, [("acostado", lying), ("parado", "De pie")])
         if step == "muac":
             return _buttons(answer, [("omitir", "No tengo cinta"), ("cancelar", "Cancelar")])
         if step in {"edema", "confirm"}:
