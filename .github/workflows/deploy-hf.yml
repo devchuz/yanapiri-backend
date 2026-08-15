@@ -7,13 +7,9 @@ on:
 
 env:
   REGISTRY: ghcr.io
-
   PROJECT_ID: yanapiri
   SERVICE_ID: yanapiri-api
-
-  # Este NO debe ser inventado.
-  # Debe ser el ID real de las credenciales GHCR creadas en Northflank.
-  CREDENTIALS_ID: TU_CREDENTIAL_ID
+  CREDENTIALS_ID: github-ghcr
 
 jobs:
   build-and-deploy:
